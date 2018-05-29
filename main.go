@@ -8,7 +8,7 @@ import (
 )
 
 // BoardSize is the length/width of the board
-const BoardSize = 3
+const BoardSize = 3 // TODO: utilize this const
 
 // structs: agent, human, environment
 
