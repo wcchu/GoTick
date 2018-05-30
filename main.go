@@ -7,6 +7,7 @@ import (
 // BoardSize is the length/width of the board
 const BoardSize = 3 // TODO: utilize this const
 
+// arrayEqualsInteger checks whether all elements in an array is equal to a certain integer
 func arrayEqualsInteger(array []int, integer int) bool {
 	for _, element := range array {
 		if element != integer {
@@ -16,7 +17,7 @@ func arrayEqualsInteger(array []int, integer int) bool {
 	return true
 }
 
-// run an episode
+// playGame runs an episode and lets players (if robot) remember what they've learnt
 func playGame(p1, p2 agent, e environment) {
 	var l location
 	e.initializeEnvironment()
@@ -50,6 +51,7 @@ func playGame(p1, p2 agent, e environment) {
 	return
 }
 
+// train two robots to play
 func main() {
 	p1 := agent{}
 	p1.initializeAgent(-1)

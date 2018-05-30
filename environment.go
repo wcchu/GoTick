@@ -13,6 +13,7 @@ type environment struct {
 	gameOver bool
 }
 
+// initializeEnvironment initializes environment
 func (e *environment) initializeEnvironment() {
 	indices := []int{0, 1, 2}
 	board := make([][]int, len(indices))
@@ -29,6 +30,7 @@ func (e *environment) initializeEnvironment() {
 	return
 }
 
+// getState hashes the game board including player locations into an integer (state)
 func (e *environment) getState() int64 { // "state" is an encoded description of the whole board
 	var k, h, v int64
 	for _, row := range e.board {
@@ -47,7 +49,7 @@ func (e *environment) getState() int64 { // "state" is an encoded description of
 	return h
 }
 
-// update gameOver and winner
+// updateGameStatus looks at the current board and updates the winner and the game-over
 func (e *environment) updateGameStatus(l location, p int) {
 	// add a player on the board
 	e.board[l[0]][l[1]] = p
@@ -123,6 +125,7 @@ func (e *environment) updateGameStatus(l location, p int) {
 	return
 }
 
+// printBoard prints the board with players on it
 func (e *environment) printBoard() {
 	// draw board
 	for _, row := range e.board {
@@ -143,8 +146,9 @@ func (e *environment) printBoard() {
 	return
 }
 
-func (e *environment) reward(id int) float64 {
-	if e.gameOver && e.winner == id {
+// reward tells the reward of the current game state for a certain player
+func (e *environment) reward(player int) float64 {
+	if e.gameOver && e.winner == player {
 		return 1.0
 	}
 	return 0.0

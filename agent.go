@@ -16,8 +16,7 @@ type agent struct {
 	values       values
 }
 
-// methods for agent
-
+// initializeAgent initializes an agent
 func (a *agent) initializeAgent(pid int) {
 	a.identity = pid
 	a.epsilon = 0.1
@@ -27,16 +26,13 @@ func (a *agent) initializeAgent(pid int) {
 	return
 }
 
+// resetAgentHistory resets the state history of an agent
 func (a *agent) resetAgentHistory() {
 	a.stateHistory = []int64{}
 	return
 }
 
-func (a *agent) setAgentIdentity(id int) {
-	a.identity = id
-	return
-}
-
+// actAgent determines what location the agent will move next
 func (a *agent) actAgent(env environment) (actionLocation location) {
 	if rand.Float64() < a.epsilon {
 		// take a random action
@@ -79,6 +75,7 @@ func (a *agent) actAgent(env environment) (actionLocation location) {
 	return actionLocation
 }
 
+// updateStateHistory append the new state to the agent's state history within the episode
 func (a *agent) updateStateHistory(state int64) {
 	a.stateHistory = append(a.stateHistory, state)
 	return
