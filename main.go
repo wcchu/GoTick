@@ -39,9 +39,6 @@ func playGame(p1, p2 agent, e environment) {
 		pid = -pid
 	}
 
-	log.Printf("*** game over ***; winner is %v", e.winner)
-	e.printBoard()
-
 	p1.updateValues(e)
 	p2.updateValues(e)
 

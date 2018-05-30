@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"math/rand"
 )
 
@@ -46,7 +45,6 @@ func (a *agent) actAgent(env environment) (actionLocation location) {
 		}
 		pickedIndex := rand.Intn(len(possibleLocations))
 		actionLocation = possibleLocations[pickedIndex]
-		log.Printf("player %v, random action, %v", a.identity, actionLocation)
 	} else {
 		// choose the best action based on current values of states
 		bestValue := -1.0
@@ -69,7 +67,6 @@ func (a *agent) actAgent(env environment) (actionLocation location) {
 				}
 			}
 		}
-		log.Printf("player %v, best value %v, %v", a.identity, bestValue, actionLocation)
 	}
 	return actionLocation
 }
@@ -99,7 +96,6 @@ func (a *agent) updateValues(env environment) {
 		target = updatedValue
 	}
 	a.resetAgentHistory() // state history is reset but memory of state values is kept
-	log.Printf("agent %v's memory size is %v", a.identity, len(a.values))
 	return
 }
 
