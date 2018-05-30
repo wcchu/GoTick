@@ -56,9 +56,16 @@ func main() {
 	p2.initializeAgent(1)
 	e := environment{}
 
-	numEpisodes := 5
+	numEpisodes := 1000
 	for episode := 0; episode < numEpisodes; episode++ {
 		log.Printf("episode = %v", episode)
 		playGame(p1, p2, e)
 	}
+
+	// let's see what p1 have learnt
+	valueArray := rankStateValues(p1.values)
+	for i := 0; i < 5; i++ {
+		log.Printf("best state %v, state = %v, value = %v", i, valueArray[i].state, valueArray[i].value)
+	}
+
 }
