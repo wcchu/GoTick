@@ -60,8 +60,7 @@ func (a *agent) actAgent(env environment) (actionLocation location) {
 					stateValue, ok := a.values[state]
 					if !ok {
 						// agent has no record of this state, use a default value
-						// TODO: generate default value in different ways
-						stateValue = 0.5
+						stateValue = defaultValue()
 					}
 					if stateValue > bestValue { // update move and best value
 						bestValue = stateValue
@@ -93,8 +92,7 @@ func (a *agent) updateValues(env environment) {
 		existingValue, ok := a.values[state]
 		if !ok {
 			// agent has no record of this state, use a default value
-			// TODO: generate default value in different ways
-			existingValue = 0.5
+			existingValue = defaultValue()
 		}
 		updatedValue := existingValue + a.alpha*(target-existingValue)
 		a.values[state] = updatedValue
@@ -103,4 +101,11 @@ func (a *agent) updateValues(env environment) {
 	a.resetAgentHistory() // state history is reset but memory of state values is kept
 	log.Printf("agent %v's memory size is %v", a.identity, len(a.values))
 	return
+}
+
+// defaultValue generates a value of certain mean and certain randomness
+func defaultValue() float64 {
+	m := 0.5 // mean
+	n := 0.1 // randomness
+	return m + n*(rand.Float64()-0.5)
 }
