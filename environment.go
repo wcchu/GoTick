@@ -1,4 +1,4 @@
-package gotick
+package main
 
 import (
 	"log"
@@ -12,8 +12,6 @@ type environment struct {
 	winner   int
 	gameOver bool
 }
-
-// methods for environment
 
 func (e *environment) initializeEnvironment() {
 	indices := []int{0, 1, 2}

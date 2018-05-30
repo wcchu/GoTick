@@ -1,4 +1,4 @@
-package gotick
+package main
 
 type human struct {
 	identity     int

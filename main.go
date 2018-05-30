@@ -1,4 +1,4 @@
-package gotick
+package main
 
 import (
 	"log"
