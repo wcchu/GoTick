@@ -4,9 +4,6 @@ import (
 	"log"
 )
 
-// BoardSize is the length/width of the board
-const BoardSize = 3 // TODO: utilize this const
-
 // arrayEqualsInteger checks whether all elements in an array is equal to a certain integer
 func arrayEqualsInteger(array []int, integer int) bool {
 	for _, element := range array {

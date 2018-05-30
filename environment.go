@@ -5,6 +5,9 @@ import (
 	"math"
 )
 
+// BoardSize is the length/width of the board
+const BoardSize = 3 // TODO: utilize this const
+
 type location [2]int
 
 type environment struct {
@@ -16,9 +19,9 @@ type environment struct {
 // initializeEnvironment initializes environment
 func (e *environment) initializeEnvironment() {
 	indices := []int{0, 1, 2}
-	board := make([][]int, len(indices))
+	board := make([][]int, BoardSize)
 	for i := range indices {
-		row := make([]int, len(indices))
+		row := make([]int, BoardSize)
 		for j := range indices {
 			row[j] = 0
 		}
@@ -99,7 +102,7 @@ func (e *environment) updateGameStatus(l location, p int) {
 	// check diagonal top-right to bottom-left
 	targetArray = []int{}
 	for i := range e.board {
-		targetArray = append(targetArray, e.board[i][len(e.board)-1-i])
+		targetArray = append(targetArray, e.board[i][BoardSize-1-i])
 	}
 	for _, player := range players {
 		if arrayEqualsInteger(targetArray, player) {
