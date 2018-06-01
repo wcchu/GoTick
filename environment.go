@@ -151,8 +151,13 @@ func (e *environment) printBoard() {
 
 // reward tells the reward of the current game state for a certain player
 func (e *environment) reward(player int) float64 {
-	if e.gameOver && e.winner == player {
-		return 1.0
+	if e.gameOver {
+		if e.winner == player { // player wins
+			return 1.0
+		} else if e.winner == 0 { // draw
+			return 0.5
+		}
 	}
+	// player loses or game not over yet
 	return 0.0
 }

@@ -78,7 +78,7 @@ func main() {
 	p2.initializeAgent(1)
 	e := environment{}
 
-	numEpisodes := 1000
+	numEpisodes := 10000
 	for episode := 0; episode < numEpisodes; episode++ {
 		log.Printf("episode = %v", episode)
 		playGame(p1, p2, e)
