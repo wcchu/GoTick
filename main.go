@@ -85,6 +85,7 @@ func main() {
 	}
 
 	exportValues(p1.values, "p1_values.csv")
+	exportValues(p2.values, "p2_values.csv")
 
 	// let's see what p1 have learnt
 	//valueArray := rankStateValues(p1.values)
