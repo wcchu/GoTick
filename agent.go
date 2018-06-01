@@ -86,12 +86,20 @@ func (a *agent) updateValues(env environment) {
 	// i is the index of a.stateHistory array
 	for i := len(a.stateHistory) - 1; i >= 0; i-- {
 		state := a.stateHistory[i]
-		existingValue, ok := a.values[state]
-		if !ok {
-			// agent has no record of this state, use a default value
-			existingValue = defaultValue()
+		var updatedValue float64
+		if target == reward {
+			// If the state is the final state, the value is the reward. The agent should
+			// learn this value by heart and there's no need to update it anymore.
+			updatedValue = target
+		} else {
+			// If the state is no the final state, update its value in the regular way
+			existingValue, ok := a.values[state]
+			if !ok {
+				// agent has no memory of this state, set to defaultValue
+				existingValue = defaultValue()
+			}
+			updatedValue = existingValue + a.alpha*(target-existingValue)
 		}
-		updatedValue := existingValue + a.alpha*(target-existingValue)
 		a.values[state] = updatedValue
 		target = updatedValue
 	}
