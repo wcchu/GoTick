@@ -17,14 +17,9 @@ type environment struct {
 
 // initializeEnvironment initializes environment
 func (env *environment) initializeEnvironment() {
-	indices := []int{0, 1, 2}
 	board := make(board, BoardSize)
-	for i := range indices {
-		row := make([]int, BoardSize)
-		for j := range indices {
-			row[j] = 0
-		}
-		board[i] = row
+	for irow := range board {
+		board[irow] = make([]int, BoardSize)
 	}
 	env.board = board
 	env.winner = 0
