@@ -5,9 +5,6 @@ import (
 	"math"
 )
 
-// BoardSize is the length/width of the board
-const BoardSize = 3
-
 type location [2]int
 
 type environment struct {

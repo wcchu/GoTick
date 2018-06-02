@@ -7,6 +7,9 @@ import (
 	"strconv"
 )
 
+// BoardSize is the length/width of the board
+const BoardSize = 3
+
 // arrayEqualsInteger checks whether all elements in an array is equal to a certain integer
 func arrayEqualsInteger(array []int, integer int) bool {
 	for _, element := range array {
@@ -18,16 +21,16 @@ func arrayEqualsInteger(array []int, integer int) bool {
 }
 
 // playGame runs an episode and lets players (if robot) remember what they've learnt
-func playGame(p1, p2 agent, e environment) {
+func playGame(p1, p2 player, e environment) {
 	var l location
 	e.initializeEnvironment()
 	pid := -1
 	for !e.gameOver {
 		// current player takes action
 		if pid == -1 {
-			l = p1.actAgent(e)
+			l = p1.robotActs(e)
 		} else {
-			l = p2.actAgent(e)
+			l = p2.robotActs(e)
 		}
 
 		// update environment by the action
@@ -35,21 +38,21 @@ func playGame(p1, p2 agent, e environment) {
 
 		// update state history
 		state := e.getState()
-		p1.updateStateHistory(state)
-		p2.updateStateHistory(state)
+		p1.updateHistory(state)
+		p2.updateHistory(state)
 
 		// switch player
 		pid = -pid
 	}
 
-	p1.updateValues(e)
-	p2.updateValues(e)
+	p1.robotUpdatesValues(e)
+	p2.robotUpdatesValues(e)
 
 	return
 }
 
-// exportValues writes state values of the agent to a csv file
-func exportValues(vs values, filename string) {
+// exportValues writes state values of the player to a csv file
+func exportValues(vs stateValues, filename string) {
 	file, err := os.Create(filename)
 	if err != nil {
 		log.Fatal("Cannot create file", err)
@@ -72,10 +75,10 @@ func exportValues(vs values, filename string) {
 
 // train two robots to play
 func main() {
-	p1 := agent{}
-	p1.initializeAgent(-1)
-	p2 := agent{}
-	p2.initializeAgent(1)
+	p1 := player{}
+	p1.initializeRobot(-1, 0.1, 0.5, 0.5, 0.01)
+	p2 := player{}
+	p2.initializeRobot(1, 0.1, 0.5, 0.5, 0.01)
 	e := environment{}
 
 	numEpisodes := 10000
@@ -84,13 +87,7 @@ func main() {
 		playGame(p1, p2, e)
 	}
 
-	exportValues(p1.values, "p1_values.csv")
-	exportValues(p2.values, "p2_values.csv")
-
-	// let's see what p1 have learnt
-	//valueArray := rankStateValues(p1.values)
-	//for i := 0; i < 5; i++ {
-	//	log.Printf("best state %v, state = %v, value = %v", i, valueArray[i].state, valueArray[i].value)
-	//}
+	exportValues(p1.intel.values, "p1_values.csv")
+	exportValues(p2.intel.values, "p2_values.csv")
 
 }

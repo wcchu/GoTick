@@ -4,36 +4,58 @@ import (
 	"math/rand"
 )
 
-// values is an agent's memory of each state's value
-type values map[int64]float64
+type stateValues map[int64]float64
 
-type agent struct {
-	epsilon      float64
-	alpha        float64
-	identity     int
-	stateHistory []int64
-	values       values
+type intel struct {
+	eps    float64     // epsilon-greedy search
+	alp    float64     // learning rate
+	mean   float64     // default value for an unseen state
+	fluc   float64     // random flucuation for the above default value
+	values stateValues // state values that the robot has learnt
 }
 
-// initializeAgent initializes an agent
-func (a *agent) initializeAgent(pid int) {
-	a.identity = pid
-	a.epsilon = 0.1
-	a.alpha = 0.5
-	a.stateHistory = []int64{}
-	a.values = values{}
+type player struct {
+	id      int     // given by the host of game
+	being   string  // human or robot
+	history []int64 // history of states played in the episode
+	intel   intel   // empty if human
+}
+
+func (p *player) initializeRobot(pid int, eps, alp, mean, fluc float64) {
+	p.id = pid
+	p.being = "robot"
+	p.history = []int64{}
+	p.intel.eps = eps
+	p.intel.alp = alp
+	p.intel.mean = mean
+	p.intel.fluc = fluc
+	p.intel.values = stateValues{}
 	return
 }
 
-// resetAgentHistory resets the state history of an agent
-func (a *agent) resetAgentHistory() {
-	a.stateHistory = []int64{}
+func (p *player) initializeHuman(pid int) {
+	p.id = pid
+	p.being = "human"
+	p.history = []int64{}
+	p.intel = intel{}
 	return
 }
 
-// actAgent determines what location the agent will move next
-func (a *agent) actAgent(env environment) (actionLocation location) {
-	if rand.Float64() < a.epsilon {
+// resetHistory resets the state history of a player
+func (p *player) resetHistory() {
+	p.history = []int64{}
+	return
+}
+
+// updateHistory append the new state to the player's state history within the episode
+func (p *player) updateHistory(state int64) {
+	p.history = append(p.history, state)
+	return
+}
+
+// robotActs determines what location the robot moves to
+func (p *player) robotActs(env environment) (actionLocation location) {
+	if rand.Float64() < p.intel.eps {
 		// take a random action
 		possibleLocations := []location{}
 		for irow, row := range env.board {
@@ -51,14 +73,15 @@ func (a *agent) actAgent(env environment) (actionLocation location) {
 		for irow, row := range env.board {
 			for ielement, element := range row {
 				if element == 0 { // location is empty; look up value if move here
-					env.board[irow][ielement] = a.identity // assume if agent move here
-					state := env.getState()                // state with this move
-					env.board[irow][ielement] = 0          // delete this action
+					env.board[irow][ielement] = p.id // assume if agent move here
+					state := env.getState()          // state with this move
+					env.board[irow][ielement] = 0    // revert this action
 					// look up value for the hypothetical state
-					stateValue, ok := a.values[state]
+					stateValue, ok := p.intel.values[state]
 					if !ok {
 						// agent has no record of this state, use a default value
-						stateValue = defaultValue()
+						// TODO: add pre-learnt knowledge of final state as in updateValues function
+						stateValue = defaultValue(p.intel.mean, p.intel.fluc)
 					}
 					if stateValue > bestValue { // update move and best value
 						bestValue = stateValue
@@ -71,45 +94,37 @@ func (a *agent) actAgent(env environment) (actionLocation location) {
 	return actionLocation
 }
 
-// updateStateHistory append the new state to the agent's state history within the episode
-func (a *agent) updateStateHistory(state int64) {
-	a.stateHistory = append(a.stateHistory, state)
-	return
-}
-
-// updateValues should only be run at the end of an episode
+// robotUpdatesvalues should only be run at the end of an episode
 // Use the update rule: V(s) = V(s) + alpha*(V(s') - V(s))
-func (a *agent) updateValues(env environment) {
-	reward := env.reward(a.identity)
+func (p *player) robotUpdatesValues(env environment) {
+	reward := env.reward(p.id)
 	target := reward
-	// loop backward from the last state to the first along stateHistory
-	// i is the index of a.stateHistory array
-	for i := len(a.stateHistory) - 1; i >= 0; i-- {
-		state := a.stateHistory[i]
+	// loop backward from the last state to the first along history
+	// i is the index of a.history array
+	for i := len(p.history) - 1; i >= 0; i-- {
+		state := p.history[i]
 		var updatedValue float64
-		if i == len(a.stateHistory)-1 {
+		if i == len(p.history)-1 {
 			// If the state is the final state, the value is the reward. The agent should
 			// just remember this state-value pair immediately.
 			updatedValue = target
 		} else {
 			// If the state is not the final state, update its value in the regular way
-			existingValue, ok := a.values[state]
+			existingValue, ok := p.intel.values[state]
 			if !ok {
-				// agent has no memory of this state, set to defaultValue
-				existingValue = defaultValue()
+				// agent has no values of this state, set to defaultValue
+				existingValue = defaultValue(p.intel.mean, p.intel.fluc)
 			}
-			updatedValue = existingValue + a.alpha*(target-existingValue)
+			updatedValue = existingValue + p.intel.alp*(target-existingValue)
 		}
-		a.values[state] = updatedValue
+		p.intel.values[state] = updatedValue
 		target = updatedValue
 	}
-	a.resetAgentHistory() // state history is reset but memory of state values is kept
+	p.resetHistory() // state history is reset but values of state values is kept
 	return
 }
 
 // defaultValue generates a value of certain mean and certain randomness
-func defaultValue() float64 {
-	m := 0.5 // mean
-	n := 0.1 // randomness
-	return m + n*(rand.Float64()-0.5)
+func defaultValue(defaultMean, fluctuation float64) float64 {
+	return defaultMean + fluctuation*(rand.Float64()-0.5)
 }
