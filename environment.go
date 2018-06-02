@@ -7,16 +7,18 @@ import (
 
 type location [2]int
 
+type board [][]int
+
 type environment struct {
-	board    [][]int
+	board    board
 	winner   int
 	gameOver bool
 }
 
 // initializeEnvironment initializes environment
-func (e *environment) initializeEnvironment() {
+func (env *environment) initializeEnvironment() {
 	indices := []int{0, 1, 2}
-	board := make([][]int, BoardSize)
+	board := make(board, BoardSize)
 	for i := range indices {
 		row := make([]int, BoardSize)
 		for j := range indices {
@@ -24,16 +26,16 @@ func (e *environment) initializeEnvironment() {
 		}
 		board[i] = row
 	}
-	e.board = board
-	e.winner = 0
-	e.gameOver = false
+	env.board = board
+	env.winner = 0
+	env.gameOver = false
 	return
 }
 
 // getState hashes the game board including player locations into an integer (state)
-func (e *environment) getState() int64 { // "state" is an encoded description of the whole board
+func (env *environment) getState() int64 { // "state" is an encoded description of the whole board
 	var k, h, v int64
-	for _, row := range e.board {
+	for _, row := range env.board {
 		for _, element := range row {
 			if element == 0 {
 				v = 0
@@ -49,86 +51,94 @@ func (e *environment) getState() int64 { // "state" is an encoded description of
 	return h
 }
 
-// updateGameStatus looks at the current board and updates the winner and the game-over
-func (e *environment) updateGameStatus(l location, p int) {
-	// add a player on the board
-	e.board[l[0]][l[1]] = p
-
-	players := [2]int{-1, 1}
+// checkBoardForWinner checks the board and finds the winner of the game
+// (if game is tie or not over yet, winner is 0)
+func checkBoardForWinner(b board) int {
+	ps := [2]int{-1, 1}
 
 	// check rows
-	for _, row := range e.board {
-		for _, player := range players {
-			if arrayEqualsInteger(row, player) {
-				e.winner = player
-				e.gameOver = true
-				return
+	for _, row := range b {
+		for _, p := range ps {
+			if arrayEqualsInteger(row, p) {
+				return p
 			}
 		}
 	}
 
 	// check columns
-	for icol := range e.board[0] {
+	for icol := range b[0] {
 		// collection is an array composed by elements of this column
 		collection := []int{}
-		for irow := range e.board {
-			collection = append(collection, e.board[irow][icol])
+		for irow := range b {
+			collection = append(collection, b[irow][icol])
 		}
-		for _, player := range players {
-			if arrayEqualsInteger(collection, player) {
-				e.winner = player
-				e.gameOver = true
-				return
+		for _, p := range ps {
+			if arrayEqualsInteger(collection, p) {
+				return p
 			}
 		}
 	}
 
 	// check diagonal top-left to bottom-right
 	var targetArray []int
-	for i := range e.board {
-		targetArray = append(targetArray, e.board[i][i])
+	for i := range b {
+		targetArray = append(targetArray, b[i][i])
 	}
-	for _, player := range players {
-		if arrayEqualsInteger(targetArray, player) {
-			e.winner = player
-			e.gameOver = true
-			return
+	for _, p := range ps {
+		if arrayEqualsInteger(targetArray, p) {
+			return p
 		}
 	}
 
 	// check diagonal top-right to bottom-left
 	targetArray = []int{}
-	for i := range e.board {
-		targetArray = append(targetArray, e.board[i][BoardSize-1-i])
+	for i := range b {
+		targetArray = append(targetArray, b[i][BoardSize-1-i])
 	}
-	for _, player := range players {
-		if arrayEqualsInteger(targetArray, player) {
-			e.winner = player
-			e.gameOver = true
-			return
+	for _, p := range ps {
+		if arrayEqualsInteger(targetArray, p) {
+			return p
 		}
 	}
 
-	// no winner found
-	e.winner = 0
+	// no player wins
+	return 0
+}
 
-	// check draw
-	e.gameOver = true // temporarily assum game is over. But is it true?
-	for _, row := range e.board {
+// checkBoardForOccupancy checks the board and finds how many locations are still unoccupied
+func checkBoardForOccupancy(b board) int {
+	availables := 0
+	for _, row := range b {
 		for _, element := range row {
-			if element == 0 { // there are still unoccupied spots, game it not over.
-				e.gameOver = false
+			if element == 0 {
+				availables++
 			}
 		}
 	}
+	return availables
+}
 
+// updateGameStatus looks at the board following a move and updates the winner and the game-over
+func (env *environment) updateGameStatus(loc location, pid int) {
+	// add the new move on the board
+	env.board[loc[0]][loc[1]] = pid
+
+	// update winner
+	env.winner = checkBoardForWinner(env.board)
+
+	// update gameOver
+	if env.winner != 0 || checkBoardForOccupancy(env.board) == 0 {
+		env.gameOver = true
+		return
+	}
+	env.gameOver = false
 	return
 }
 
 // printBoard prints the board with players on it
-func (e *environment) printBoard() {
+func (env *environment) printBoard() {
 	// draw board
-	for _, row := range e.board {
+	for _, row := range env.board {
 		log.Print("------------------")
 		rowPrint := ""
 		for _, element := range row {
@@ -147,11 +157,11 @@ func (e *environment) printBoard() {
 }
 
 // reward tells the reward of the current game state for a certain player
-func (e *environment) reward(player int) float64 {
-	if e.gameOver {
-		if e.winner == player { // player wins
+func (env *environment) reward(pid int) float64 {
+	if env.gameOver {
+		if env.winner == pid { // this player wins
 			return 1.0
-		} else if e.winner == 0 { // draw
+		} else if env.winner == 0 { // tie
 			return 0.5
 		}
 	}
