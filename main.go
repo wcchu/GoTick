@@ -21,32 +21,33 @@ func arrayEqualsInteger(array []int, integer int) bool {
 }
 
 // playGame runs an episode and lets players (if robot) remember what they've learnt
-func playGame(p1, p2 player, e environment) {
-	var l location
-	e.initializeEnvironment()
+func playGame(player1, player2 player, env environment) {
+	var loc location
+	env.initializeEnvironment()
 	pid := -1
-	for !e.gameOver {
+	for !env.gameOver {
 		// current player takes action
+		// TODO: consider human player as well
 		if pid == -1 {
-			l = p1.robotActs(e)
+			loc = player1.robotActs(env)
 		} else {
-			l = p2.robotActs(e)
+			loc = player2.robotActs(env)
 		}
 
 		// update environment by the action
-		e.updateGameStatus(l, pid)
+		env.updateGameStatus(loc, pid)
 
 		// update state history
-		state := e.getState()
-		p1.updateHistory(state)
-		p2.updateHistory(state)
+		state := env.getState()
+		player1.updateHistory(state)
+		player2.updateHistory(state)
 
 		// switch player
 		pid = -pid
 	}
 
-	p1.robotUpdatesValues(e)
-	p2.robotUpdatesValues(e)
+	player1.robotUpdatesValues(env)
+	player2.robotUpdatesValues(env)
 
 	return
 }
@@ -73,21 +74,20 @@ func exportValues(vs stateValues, filename string) {
 	return
 }
 
-// train two robots to play
+// train robots and let human play with a robot
 func main() {
-	p1 := player{}
-	p1.initializeRobot(-1, 0.1, 0.5, 0.5, 0.01)
-	p2 := player{}
-	p2.initializeRobot(1, 0.1, 0.5, 0.5, 0.01)
-	e := environment{}
+	var env environment
 
+	// train two robots
+	var robot1, robot2 player
+	robot1.initializeRobot(-1, 0.1, 0.5, 0.5, 0.01)
+	robot2.initializeRobot(1, 0.1, 0.5, 0.5, 0.01)
 	numEpisodes := 10000
 	for episode := 0; episode < numEpisodes; episode++ {
 		log.Printf("episode = %v", episode)
-		playGame(p1, p2, e)
+		playGame(robot1, robot2, env)
 	}
-
-	exportValues(p1.intel.values, "p1_values.csv")
-	exportValues(p2.intel.values, "p2_values.csv")
+	exportValues(robot1.intel.values, "robot1_values.csv")
+	exportValues(robot2.intel.values, "robot2_values.csv")
 
 }
