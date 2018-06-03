@@ -12,17 +12,20 @@ type intel struct {
 	mean   float64     // default value for an unseen state
 	fluc   float64     // random flucuation for the above default value
 	values stateValues // state values that the robot has learnt
+	verb   bool        // verbose
 }
 
 type player struct {
-	id      int     // given by the host of game
+	name    string  // name of the player
+	symbol  string  // "x" plays first, "o" plays second. Each episode assigns symbols randomly.
 	being   string  // human or robot
 	history []int64 // history of states played in the episode
 	intel   intel   // empty if human
 }
 
-func (p *player) initializeRobot(pid int, eps, alp, mean, fluc float64) {
-	p.id = pid
+func (p *player) initializeRobot(name string, eps, alp, mean, fluc float64, verb bool) {
+	p.name = name
+	p.symbol = ""
 	p.being = "robot"
 	p.history = []int64{}
 	p.intel.eps = eps
@@ -30,11 +33,13 @@ func (p *player) initializeRobot(pid int, eps, alp, mean, fluc float64) {
 	p.intel.mean = mean
 	p.intel.fluc = fluc
 	p.intel.values = stateValues{}
+	p.intel.verb = verb
 	return
 }
 
-func (p *player) initializeHuman(pid int) {
-	p.id = pid
+func (p *player) initializeHuman(name string) {
+	p.name = name
+	p.symbol = ""
 	p.being = "human"
 	p.history = []int64{}
 	p.intel = intel{}
@@ -60,7 +65,7 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 		possibleLocations := []location{}
 		for irow, row := range env.board {
 			for ielement, element := range row {
-				if element == 0 {
+				if element == "" {
 					possibleLocations = append(possibleLocations, location{irow, ielement})
 				}
 			}
@@ -72,19 +77,23 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 		bestValue := -1.0
 		for irow, row := range env.board {
 			for ielement, element := range row {
-				if element == 0 { // location is empty; look up value if move here
-					env.board[irow][ielement] = p.id // assume if agent move here
-					state := env.getState()          // state with this move
-					env.board[irow][ielement] = 0    // revert this action
-					// look up value for the hypothetical state
-					stateValue, ok := p.intel.values[state]
-					if !ok {
-						// agent has no record of this state, use a default value
-						// TODO: add pre-learnt knowledge of final state as in updateValues function
-						stateValue = defaultValue(p.intel.mean, p.intel.fluc)
+				if element == "" { // location is empty; look up value if move here
+					env.board[irow][ielement] = p.symbol // assume if player moves here
+					testState := env.getState(p.symbol)  // state after this move
+					testWinner := getWinner(env.board)   // winner after this move
+					testEmpties := getEmpties(env.board) // empty spots after this move
+					env.board[irow][ielement] = ""       // revert this action
+					// get value for the test state
+					testValue, ok := p.intel.values[testState]
+					if !ok { // agent has no record of this state
+						if testWinner != "" || testEmpties == 0 { // test state is final state, use reward as value
+							testValue = getReward(testWinner, p.symbol)
+						} else { // test state is not final state, use default value
+							testValue = defaultValue(p.intel.mean, p.intel.fluc)
+						}
 					}
-					if stateValue > bestValue { // update move and best value
-						bestValue = stateValue
+					if testValue > bestValue { // update move and best value
+						bestValue = testValue
 						actionLocation = location{irow, ielement}
 					}
 				}
@@ -97,7 +106,7 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 // robotUpdatesvalues should only be run at the end of an episode
 // Use the update rule: V(s) = V(s) + alpha*(V(s') - V(s))
 func (p *player) robotUpdatesValues(env environment) {
-	reward := env.reward(p.id)
+	reward := getReward(env.winner, p.symbol)
 	target := reward
 	// loop backward from the last state to the first along history
 	// i is the index of a.history array

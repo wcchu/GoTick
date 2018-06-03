@@ -7,36 +7,38 @@ import (
 
 type location [2]int
 
-type board [][]int
+type board [][]string
 
 type environment struct {
 	board    board
-	winner   int
+	winner   string
 	gameOver bool
 }
 
 // initializeEnvironment initializes environment
 func (env *environment) initializeEnvironment() {
-	board := make(board, BoardSize)
+	board := make(board, boardSize)
 	for irow := range board {
-		board[irow] = make([]int, BoardSize)
+		board[irow] = make([]string, boardSize)
 	}
 	env.board = board
-	env.winner = 0
+	env.winner = ""
 	env.gameOver = false
 	return
 }
 
-// getState hashes the game board including player locations into an integer (state)
-func (env *environment) getState() int64 { // "state" is an encoded description of the whole board
+// getState hashes the game board in the player's perspective into an integer
+// NOTE: For each player, each location's status is viewed only as occupied either by him/herself or
+//       by the opponent, regardless of the actual symbol ("x" or "o") there.
+func (env *environment) getState(symbol string) int64 {
 	var k, h, v int64
 	for _, row := range env.board {
 		for _, element := range row {
-			if element == 0 {
+			if element == symbol { // occupied by current player
 				v = 0
-			} else if element == -1 {
+			} else if element == "" { // empty
 				v = 1
-			} else if element == 1 {
+			} else { // occupied by opponent
 				v = 2
 			}
 			h = h + int64(math.Pow(3, float64(k)))*v
@@ -46,87 +48,17 @@ func (env *environment) getState() int64 { // "state" is an encoded description 
 	return h
 }
 
-// checkBoardForWinner checks the board and finds the winner of the game
-// (if game is tie or not over yet, winner is 0)
-func checkBoardForWinner(b board) int {
-	ps := [2]int{-1, 1}
-
-	// check rows
-	for _, row := range b {
-		for _, p := range ps {
-			if arrayEqualsInteger(row, p) {
-				return p
-			}
-		}
-	}
-
-	// check columns
-	for icol := range b[0] {
-		// collection is an array composed by elements of this column
-		collection := []int{}
-		for irow := range b {
-			collection = append(collection, b[irow][icol])
-		}
-		for _, p := range ps {
-			if arrayEqualsInteger(collection, p) {
-				return p
-			}
-		}
-	}
-
-	// check diagonal top-left to bottom-right
-	var targetArray []int
-	for i := range b {
-		targetArray = append(targetArray, b[i][i])
-	}
-	for _, p := range ps {
-		if arrayEqualsInteger(targetArray, p) {
-			return p
-		}
-	}
-
-	// check diagonal top-right to bottom-left
-	targetArray = []int{}
-	for i := range b {
-		targetArray = append(targetArray, b[i][BoardSize-1-i])
-	}
-	for _, p := range ps {
-		if arrayEqualsInteger(targetArray, p) {
-			return p
-		}
-	}
-
-	// no player wins
-	return 0
-}
-
-// checkBoardForOccupancy checks the board and finds how many locations are still unoccupied
-func checkBoardForOccupancy(b board) int {
-	availables := 0
-	for _, row := range b {
-		for _, element := range row {
-			if element == 0 {
-				availables++
-			}
-		}
-	}
-	return availables
-}
-
 // updateGameStatus looks at the board following a move and updates the winner and the game-over
-func (env *environment) updateGameStatus(loc location, pid int) {
-	// add the new move on the board
-	env.board[loc[0]][loc[1]] = pid
-
-	// update winner
-	env.winner = checkBoardForWinner(env.board)
-
-	// update gameOver
-	if env.winner != 0 || checkBoardForOccupancy(env.board) == 0 {
+func (env *environment) updateGameStatus(loc location, symbol string) {
+	// add new move on the board
+	env.board[loc[0]][loc[1]] = symbol
+	// update status
+	env.winner = getWinner(env.board)
+	if env.winner != "" || getEmpties(env.board) == 0 {
 		env.gameOver = true
-		return
+	} else {
+		env.gameOver = false
 	}
-	env.gameOver = false
 	return
 }
 
@@ -134,32 +66,90 @@ func (env *environment) updateGameStatus(loc location, pid int) {
 func (env *environment) printBoard() {
 	// draw board
 	for _, row := range env.board {
-		log.Print("------------------")
-		rowPrint := ""
+		log.Print("-------------")
+		rowPrint := "|"
 		for _, element := range row {
-			if element == -1 {
-				rowPrint += "x  |"
-			} else if element == 1 {
-				rowPrint += "o  |"
+			if element == "x" {
+				rowPrint += " x |"
+			} else if element == "o" {
+				rowPrint += " o |"
 			} else {
 				rowPrint += "   |"
 			}
 		}
 		log.Print(rowPrint)
 	}
-	log.Print("------------------")
+	log.Print("-------------")
 	return
 }
 
-// reward tells the reward of the current game state for a certain player
-func (env *environment) reward(pid int) float64 {
-	if env.gameOver {
-		if env.winner == pid { // this player wins
-			return 1.0
-		} else if env.winner == 0 { // tie
-			return 0.5
+// check the current board and find the winner
+func getWinner(b board) string {
+	// rows
+	for _, row := range b {
+		for _, p := range symbols {
+			if rowFilled(row, p) {
+				return p
+			}
 		}
 	}
-	// player loses or game not over yet
-	return 0.0
+	// columns
+	for icol := range b[0] {
+		// collection is an array composed by elements of this column
+		collection := []string{}
+		for irow := range b {
+			collection = append(collection, b[irow][icol])
+		}
+		for _, p := range symbols {
+			if rowFilled(collection, p) {
+				return p
+			}
+		}
+	}
+	// top-left to bottom-right
+	var targetArray []string
+	for i := range b {
+		targetArray = append(targetArray, b[i][i])
+	}
+	for _, p := range symbols {
+		if rowFilled(targetArray, p) {
+			return p
+		}
+	}
+	// top-right to bottom-left
+	targetArray = []string{}
+	for i := range b {
+		targetArray = append(targetArray, b[i][boardSize-1-i])
+	}
+	for _, p := range symbols {
+		if rowFilled(targetArray, p) {
+			return p
+		}
+	}
+	// no winner found
+	return ""
+}
+
+// check number of empty spots
+func getEmpties(b board) int {
+	n := 0
+	for _, row := range b {
+		for _, element := range row {
+			if element == "" {
+				n++
+			}
+		}
+	}
+	return n
+}
+
+// get reward of the current game state for a certain player: non-zero only if a winner is found
+func getReward(w string, s string) float64 {
+	if w == s { // this player wins
+		return 1.0
+	} else if w == "" { // draw or game not over yet
+		return 0.0
+	}
+	// this player loses
+	return -1.0
 }

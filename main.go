@@ -3,17 +3,19 @@ package main
 import (
 	"encoding/csv"
 	"log"
+	"math/rand"
 	"os"
 	"strconv"
 )
 
-// BoardSize is the length/width of the board
-const BoardSize = 3
+// Global constants
+const boardSize = 3               // length/width of the board
+var symbols = [2]string{"x", "o"} // player symbols on the board
 
-// arrayEqualsInteger checks whether all elements in an array is equal to a certain integer
-func arrayEqualsInteger(array []int, integer int) bool {
+// rowFilled checks whether all elements in a string array are equal to a certain string
+func rowFilled(array []string, s string) bool {
 	for _, element := range array {
-		if element != integer {
+		if element != s {
 			return false
 		}
 	}
@@ -21,33 +23,38 @@ func arrayEqualsInteger(array []int, integer int) bool {
 }
 
 // playGame runs an episode and lets players (if robot) remember what they've learnt
-func playGame(player1, player2 player, env environment) {
+func playGame(p1, p2 player, env environment) {
 	var loc location
 	env.initializeEnvironment()
-	pid := -1
+	// p1 always starts first and uses "x"
+	p1.symbol = "x"
+	p2.symbol = "o"
+	s := "o" // current player
 	for !env.gameOver {
-		// current player takes action
+		// switch player and take action
 		// TODO: consider human player as well
-		if pid == -1 {
-			loc = player1.robotActs(env)
+		if s == "o" {
+			s = "x"
+			loc = p1.robotActs(env)
 		} else {
-			loc = player2.robotActs(env)
+			s = "o"
+			loc = p2.robotActs(env)
 		}
 
 		// update environment by the action
-		env.updateGameStatus(loc, pid)
+		env.updateGameStatus(loc, s)
 
 		// update state history
-		state := env.getState()
-		player1.updateHistory(state)
-		player2.updateHistory(state)
-
-		// switch player
-		pid = -pid
+		state := env.getState(s)
+		p1.updateHistory(state)
+		p2.updateHistory(state)
 	}
 
-	player1.robotUpdatesValues(env)
-	player2.robotUpdatesValues(env)
+	//log.Print("game over")
+	//env.printBoard()
+
+	p1.robotUpdatesValues(env)
+	p2.robotUpdatesValues(env)
 
 	return
 }
@@ -79,15 +86,22 @@ func main() {
 	var env environment
 
 	// train two robots
-	var robot1, robot2 player
-	robot1.initializeRobot(-1, 0.1, 0.5, 0.5, 0.01)
-	robot2.initializeRobot(1, 0.1, 0.5, 0.5, 0.01)
-	numEpisodes := 10000
+	var r2d2, termino player
+	r2d2.initializeRobot("R2-D2", 0.1, 0.5, 0.0, 0.01, true)
+	termino.initializeRobot("Terminator", 0.1, 0.5, 0.0, 0.01, false)
+	numEpisodes := 5
 	for episode := 0; episode < numEpisodes; episode++ {
+		//if math.Mod(float64(episode+1), 1000) == 0 {
 		log.Printf("episode = %v", episode)
-		playGame(robot1, robot2, env)
+		//}
+		// for each episode, randomly pick the first player
+		if rand.Float64() < 0.5 {
+			playGame(r2d2, termino, env)
+		} else {
+			playGame(termino, r2d2, env)
+		}
 	}
-	exportValues(robot1.intel.values, "robot1_values.csv")
-	exportValues(robot2.intel.values, "robot2_values.csv")
+	exportValues(r2d2.intel.values, "robot1_values.csv")
+	exportValues(termino.intel.values, "robot2_values.csv")
 
 }
