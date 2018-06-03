@@ -149,12 +149,12 @@ func getEmpties(b board) int {
 	return n
 }
 
-// get reward of the current game state for a certain player: non-zero only if a winner is found
-func getReward(w string, s string) float64 {
+// get reward for a certain player by knowing the winner
+func getReward(w, s string, d float64) float64 {
 	if w == s { // this player wins
 		return 1.0
-	} else if w == "" { // draw or game not over yet
-		return 0.0
+	} else if w == "" { // draw
+		return d
 	}
 	// this player loses
 	return -1.0

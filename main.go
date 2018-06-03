@@ -88,9 +88,9 @@ func main() {
 
 	// train two robots
 	var r2d2, termino player
-	r2d2.initializeRobot("R2-D2", 0.1, 0.5, 0.0, 0.01, false)
-	termino.initializeRobot("Terminator", 0.1, 0.5, 0.0, 0.01, false)
-	numEpisodes := 10000
+	r2d2.initializeRobot("R2-D2", 0.1, 0.5, 0.0, 0.01, 1.0, false)
+	termino.initializeRobot("Terminator", 0.1, 0.5, 0.0, 0.01, -1.0, false)
+	numEpisodes := 50000
 	for episode := 0; episode < numEpisodes; episode++ {
 		if math.Mod(float64(episode+1), 1000) == 0 {
 			log.Printf("episode = %v", episode)

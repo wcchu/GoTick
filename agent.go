@@ -27,7 +27,7 @@ type player struct {
 	intel   intel   // empty if human
 }
 
-func (p *player) initializeRobot(name string, eps, alp, mean, fluc float64, verb bool) {
+func (p *player) initializeRobot(name string, eps, alp, mean, fluc, draw float64, verb bool) {
 	p.name = name
 	p.symbol = ""
 	p.being = "robot"
@@ -37,6 +37,7 @@ func (p *player) initializeRobot(name string, eps, alp, mean, fluc float64, verb
 	p.intel.alp = alp
 	p.intel.mean = mean
 	p.intel.fluc = fluc
+	p.intel.draw = draw
 	p.intel.values = stateValues{}
 	p.intel.verb = verb
 	return
@@ -96,7 +97,7 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 					testValue, ok := p.intel.values[testState]
 					if !ok { // agent has no record of this state
 						if testWinner != "" || testEmpties == 0 { // test state is final state, use reward as value
-							testValue = getReward(testWinner, p.symbol)
+							testValue = getReward(testWinner, p.symbol, p.intel.draw)
 						} else { // test state is not final state, use default value
 							testValue = defaultValue(p.intel.mean, p.intel.fluc)
 						}
@@ -122,7 +123,7 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 // robotUpdatesvalues should only be run at the end of an episode
 // Use the update rule: V(s) = V(s) + alpha*(V(s') - V(s))
 func (p *player) robotUpdatesValues(env environment) {
-	reward := getReward(env.winner, p.symbol)
+	reward := getReward(env.winner, p.symbol, p.intel.draw)
 	target := reward
 	// loop backward from the last state to the first along history
 	// i is the index of a.history array
