@@ -88,9 +88,15 @@ func main() {
 
 	// train two robots
 	var r2d2, termino player
-	r2d2.initializeRobot("R2-D2", 0.1, 0.5, 0.0, 0.01, 1.0, false)
-	termino.initializeRobot("Terminator", 0.1, 0.5, 0.0, 0.01, -1.0, false)
-	numEpisodes := 50000
+	r2d2.initializeRobot(
+		"R2-D2",
+		robotSpecs{eps: 0.1, alp: 0.5, mean: 0.0, fluc: 0.01, draw: 1.0},
+		false)
+	termino.initializeRobot(
+		"Terminator",
+		robotSpecs{eps: 0.1, alp: 0.5, mean: 0.0, fluc: 0.01, draw: -1.0},
+		false)
+	numEpisodes := 10000
 	for episode := 0; episode < numEpisodes; episode++ {
 		if math.Mod(float64(episode+1), 1000) == 0 {
 			log.Printf("episode = %v", episode)
@@ -104,8 +110,8 @@ func main() {
 	}
 
 	log.Printf("r2d2 won %v times", r2d2.wins)
-	exportValues(r2d2.intel.values, "robot1_values.csv")
+	exportValues(r2d2.mind.values, "robot1_values.csv")
 	log.Printf("termino won %v times", termino.wins)
-	exportValues(termino.intel.values, "robot2_values.csv")
+	exportValues(termino.mind.values, "robot2_values.csv")
 
 }
