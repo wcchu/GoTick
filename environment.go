@@ -62,24 +62,30 @@ func (env *environment) updateGameStatus(loc location, symbol string) {
 	return
 }
 
+func padSymbol(s string) string {
+	if len(s) == 0 {
+		s = "     "
+	} else if len(s) == 1 {
+		s = "  " + s + "  "
+	} else if len(s) == 4 {
+		s = " " + s
+	}
+	s += "|"
+	return s
+}
+
 // printBoard prints the board with players on it
-func (env *environment) printBoard() {
+func printBoard(b *board) {
 	// draw board
-	for _, row := range env.board {
-		log.Print("-------------")
+	for _, row := range *b {
+		log.Print("-------------------")
 		rowPrint := "|"
 		for _, element := range row {
-			if element == "x" {
-				rowPrint += " x |"
-			} else if element == "o" {
-				rowPrint += " o |"
-			} else {
-				rowPrint += "   |"
-			}
+			rowPrint += padSymbol(element)
 		}
 		log.Print(rowPrint)
 	}
-	log.Print("-------------")
+	log.Print("-------------------")
 	return
 }
 

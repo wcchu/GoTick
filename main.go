@@ -51,7 +51,7 @@ func playGame(p1, p2 player, env environment) {
 	}
 
 	//log.Print("game over")
-	//env.printBoard()
+	printBoard(&env.board)
 
 	p1.robotUpdatesValues(env)
 	p2.robotUpdatesValues(env)
