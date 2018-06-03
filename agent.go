@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"math/rand"
 	"strconv"
 )
@@ -80,7 +81,7 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 		for irow, row := range env.board {
 			plan[irow] = make([]string, boardSize)
 			for ielement, element := range row {
-				plan[irow][ielement] = "  " + element + " "
+				plan[irow][ielement] = element
 				if element == "" { // location is empty; look up value if move here
 					env.board[irow][ielement] = p.symbol // assume if player moves here
 					testState := env.getState(p.symbol)  // state after this move
@@ -96,7 +97,7 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 							testValue = defaultValue(p.intel.mean, p.intel.fluc)
 						}
 					}
-					plan[irow][ielement] = " " + strconv.FormatFloat(testValue, 'f', 2, 64)
+					plan[irow][ielement] = strconv.FormatFloat(testValue, 'f', 2, 64)
 					// update move and best value
 					if testValue > bestValue {
 						bestValue = testValue
@@ -105,7 +106,11 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 				}
 			}
 		}
-
+		if p.intel.verb {
+			log.Printf("player %v(%v)'s plan board:", p.name, p.symbol)
+			printBoard(&plan)
+			log.Printf("action on %v \n\n", actionLocation)
+		}
 	}
 	return actionLocation
 }
