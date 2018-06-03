@@ -24,7 +24,7 @@ func rowFilled(array []string, s string) bool {
 }
 
 // playGame runs an episode and lets players (if robot) remember what they've learnt
-func playGame(p1, p2 player, env environment) {
+func playGame(p1, p2 *player, env environment) {
 	var loc location
 	env.initializeEnvironment()
 	// p1 always starts first and uses "x"
@@ -90,19 +90,22 @@ func main() {
 	var r2d2, termino player
 	r2d2.initializeRobot("R2-D2", 0.1, 0.5, 0.0, 0.01, false)
 	termino.initializeRobot("Terminator", 0.1, 0.5, 0.0, 0.01, false)
-	numEpisodes := 5
+	numEpisodes := 10000
 	for episode := 0; episode < numEpisodes; episode++ {
 		if math.Mod(float64(episode+1), 1000) == 0 {
 			log.Printf("episode = %v", episode)
 		}
 		// for each episode, randomly pick the first player
 		if rand.Float64() < 0.5 {
-			playGame(r2d2, termino, env)
+			playGame(&r2d2, &termino, env)
 		} else {
-			playGame(termino, r2d2, env)
+			playGame(&termino, &r2d2, env)
 		}
 	}
+
+	//log.Printf("r2d2 won %v times", r2d2.wins)
 	exportValues(r2d2.intel.values, "robot1_values.csv")
+	//log.Printf("termino won %v times", termino.wins)
 	exportValues(termino.intel.values, "robot2_values.csv")
 
 }
