@@ -2,6 +2,7 @@ package main
 
 import (
 	"math/rand"
+	"strconv"
 )
 
 type stateValues map[int64]float64
@@ -73,10 +74,13 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 		pickedIndex := rand.Intn(len(possibleLocations))
 		actionLocation = possibleLocations[pickedIndex]
 	} else {
+		plan := make(board, boardSize) // only useful for printing out the plan
 		// choose the best action based on current values of states
 		bestValue := -1.0
 		for irow, row := range env.board {
+			plan[irow] = make([]string, boardSize)
 			for ielement, element := range row {
+				plan[irow][ielement] = "  " + element + " "
 				if element == "" { // location is empty; look up value if move here
 					env.board[irow][ielement] = p.symbol // assume if player moves here
 					testState := env.getState(p.symbol)  // state after this move
@@ -92,13 +96,16 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 							testValue = defaultValue(p.intel.mean, p.intel.fluc)
 						}
 					}
-					if testValue > bestValue { // update move and best value
+					plan[irow][ielement] = " " + strconv.FormatFloat(testValue, 'f', 2, 64)
+					// update move and best value
+					if testValue > bestValue {
 						bestValue = testValue
 						actionLocation = location{irow, ielement}
 					}
 				}
 			}
 		}
+
 	}
 	return actionLocation
 }
