@@ -103,9 +103,9 @@ func main() {
 		}
 	}
 
-	//log.Printf("r2d2 won %v times", r2d2.wins)
+	log.Printf("r2d2 won %v times", r2d2.wins)
 	exportValues(r2d2.intel.values, "robot1_values.csv")
-	//log.Printf("termino won %v times", termino.wins)
+	log.Printf("termino won %v times", termino.wins)
 	exportValues(termino.intel.values, "robot2_values.csv")
 
 }

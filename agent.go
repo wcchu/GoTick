@@ -13,6 +13,7 @@ type intel struct {
 	alp    float64     // learning rate
 	mean   float64     // default value for an unseen state
 	fluc   float64     // random flucuation for the above default value
+	draw   float64     // reward for draw game (between winning 1 and losing -1)
 	values stateValues // state values that the robot has learnt
 	verb   bool        // verbose
 }
@@ -22,6 +23,7 @@ type player struct {
 	symbol  string  // "x" plays first, "o" plays second. Each episode assigns symbols randomly.
 	being   string  // human or robot
 	history []int64 // history of states played in the episode
+	wins    int     // number of wins
 	intel   intel   // empty if human
 }
 
@@ -30,6 +32,7 @@ func (p *player) initializeRobot(name string, eps, alp, mean, fluc float64, verb
 	p.symbol = ""
 	p.being = "robot"
 	p.history = []int64{}
+	p.wins = 0
 	p.intel.eps = eps
 	p.intel.alp = alp
 	p.intel.mean = mean
@@ -44,6 +47,7 @@ func (p *player) initializeHuman(name string) {
 	p.symbol = ""
 	p.being = "human"
 	p.history = []int64{}
+	p.wins = 0
 	p.intel = intel{}
 	return
 }
@@ -140,6 +144,9 @@ func (p *player) robotUpdatesValues(env environment) {
 		}
 		p.intel.values[state] = updatedValue
 		target = updatedValue
+	}
+	if env.winner == p.symbol {
+		p.wins++
 	}
 	p.resetHistory() // state history is reset but values of state values is kept
 	return
