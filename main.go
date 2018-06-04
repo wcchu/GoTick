@@ -14,16 +14,6 @@ import (
 const boardSize = 3               // length/width of the board
 var symbols = [2]string{"x", "o"} // player symbols on the board
 
-// rowFilled checks whether all elements in a string array are equal to a certain string
-func rowFilled(array []string, s string) bool {
-	for _, element := range array {
-		if element != s {
-			return false
-		}
-	}
-	return true
-}
-
 // playGame runs an episode and lets players (if robot) remember what they've learnt
 func playGame(p1, p2 *player, env environment) {
 	var loc location

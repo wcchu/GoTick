@@ -89,6 +89,16 @@ func printBoard(b *board) {
 	return
 }
 
+// rowFilled checks whether all elements in a string array are equal to a certain string
+func rowFilled(array []string, s string) bool {
+	for _, element := range array {
+		if element != s {
+			return false
+		}
+	}
+	return true
+}
+
 // check the current board and find the winner
 func getWinner(b board) string {
 	// rows
