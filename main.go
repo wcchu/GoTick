@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"fmt"
 	"log"
 	"math"
 	"math/rand"
@@ -33,13 +34,12 @@ func playGame(p1, p2 *player, env environment) {
 	s := "o" // current player
 	for !env.gameOver {
 		// switch player and take action
-		// TODO: consider human player as well
 		if s == "o" {
 			s = "x"
-			loc = p1.robotActs(env)
+			loc = p1.playerActs(env)
 		} else {
 			s = "o"
-			loc = p2.robotActs(env)
+			loc = p2.playerActs(env)
 		}
 
 		// update environment by the action
@@ -51,11 +51,24 @@ func playGame(p1, p2 *player, env environment) {
 		p2.updateHistory(state)
 	}
 
-	//log.Print("game over")
-	//printBoard(&env.board)
+	if p1.being == "human" || p2.being == "human" {
+		// someone is a human being, let's announce the winner
+		log.Print("game over")
+		printBoard(&env.board)
+		if env.winner != "" { // there's a winner
+			if env.winner == p1.symbol {
+				log.Printf("%v is the winner", p1.name)
+			} else {
+				log.Printf("%v is the winner", p2.name)
+			}
+		} else {
+			log.Print("draw")
+		}
+	}
 
-	p1.robotUpdatesValues(env)
-	p2.robotUpdatesValues(env)
+	// grow some intelligence
+	p1.updateValues(env)
+	p2.updateValues(env)
 
 	return
 }
@@ -108,10 +121,15 @@ func main() {
 			playGame(&termino, &r2d2, env)
 		}
 	}
-
 	log.Printf("r2d2 won %v times", r2d2.wins)
 	exportValues(r2d2.mind.values, "robot1_values.csv")
 	log.Printf("termino won %v times", termino.wins)
 	exportValues(termino.mind.values, "robot2_values.csv")
+	fmt.Print("training session ends \n")
+
+	// human plays with r2d2
+	var aHuman player
+	aHuman.initializeHuman("A Human")
+	playGame(&r2d2, &aHuman, env)
 
 }

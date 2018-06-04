@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
 	"strconv"
@@ -17,9 +18,9 @@ type robotSpecs struct {
 }
 
 type mind struct {
-	specs robotSpecs
+	specs  robotSpecs
 	values stateValues // state values that the robot has learnt
-	verb  bool        // verbose
+	verb   bool        // verbose
 }
 
 type player struct {
@@ -63,6 +64,31 @@ func (p *player) resetHistory() {
 func (p *player) updateHistory(state int64) {
 	p.history = append(p.history, state)
 	return
+}
+
+func (p *player) playerActs(env environment) (actionLocation location) {
+	if p.being == "robot" {
+		return p.robotActs(env)
+	}
+	return p.humanActs(env)
+}
+
+func (p *player) humanActs(env environment) (actionLocation location) {
+	printBoard(&env.board)
+	for {
+		var x, y int
+		fmt.Print("Enter location (x, y): ")
+		_, err := fmt.Scanf("%d,%d", &x, &y)
+		if err == nil {
+			l := location{x, y}
+			if env.board[l[0]][l[1]] == "" {
+				log.Printf("You are making a move to %v", l)
+				return l
+			}
+		}
+		// invalid move, re-enter location
+		fmt.Print("invalid move \n")
+	}
 }
 
 // robotActs determines what location the robot moves to
@@ -118,6 +144,13 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 		}
 	}
 	return actionLocation
+}
+
+func (p *player) updateValues(env environment) {
+	if p.being == "robot" {
+		p.robotUpdatesValues(env)
+	}
+	return
 }
 
 // robotUpdatesvalues should only be run at the end of an episode
