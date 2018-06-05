@@ -23,12 +23,12 @@ func (env *environment) reportEpisode(p1, p2 *player) {
 	}
 	if env.winner != "" { // there's a winner
 		if env.winner == p1.symbol {
-			fmt.Printf("%v is the winner \n", p1.name)
+			fmt.Printf("%v is the winner \n\n", p1.name)
 		} else {
-			fmt.Printf("%v is the winner \n", p2.name)
+			fmt.Printf("%v is the winner \n\n", p2.name)
 		}
 	} else {
-		fmt.Print("draw \n")
+		fmt.Print("draw \n\n")
 	}
 	return
 }
@@ -185,5 +185,5 @@ func getReward(w, s string, d float64) float64 {
 		return d
 	}
 	// this player loses
-	return -1.0
+	return 0.0
 }

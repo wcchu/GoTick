@@ -22,6 +22,6 @@ print(hist_value)
 
 hist_value_sum <-
   ggplot(memory) +
-  geom_histogram(aes(x = sum), binwidth = 0.002) +
+  geom_histogram(aes(x = sum), binwidth = 0.001) +
   labs(title = 'Histogram of (p1 value + p2 value)', x = 'Value', y = 'Count')
 print(hist_value_sum)

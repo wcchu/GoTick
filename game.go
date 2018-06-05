@@ -6,14 +6,22 @@ import (
 	"math/rand"
 )
 
-// playGame runs an episode and lets players (if robot) remember what they've learnt
-func playGame(p1, p2 *player) {
+// run an episode and let players (if robot) remember what they've learnt
+func runEpisode(p1, p2 *player) {
 	var loc location
 	var env environment
+	var crossSpecies bool // if episode is cross-species, make reports more often
 	env.initializeEnvironment()
+	if p1.being != p2.being {
+		crossSpecies = true
+	}
+
 	// p1 always starts first and uses "x"
 	p1.symbol = "x"
 	p2.symbol = "o"
+	if crossSpecies {
+		fmt.Printf("\n %v(%v) starts first \n", p1.name, p1.symbol)
+	}
 	s := "o" // current player
 	for !env.gameOver {
 		// switch player and take action
@@ -34,8 +42,7 @@ func playGame(p1, p2 *player) {
 		p2.updateHistory(state)
 	}
 
-	if p1.being == "human" || p2.being == "human" {
-		// someone is a human being, let's announce the winner
+	if crossSpecies {
 		env.reportEpisode(p1, p2)
 	}
 
@@ -53,10 +60,16 @@ func runSession(p1, p2 *player, nEpisodes int) {
 		}
 		// for each episode, randomly pick the first player
 		if rand.Float64() < 0.5 {
-			playGame(p1, p2)
+			runEpisode(p1, p2)
 		} else {
-			playGame(p2, p1)
+			runEpisode(p2, p1)
 		}
 	}
 	fmt.Printf("Session ends - %v won %v times; %v won %v times \n", p1.name, p1.wins, p2.name, p2.wins)
+	if p1.being == "robot" {
+		fmt.Printf("%v has %v state-values \n", p1.name, len(p1.mind.values))
+	}
+	if p2.being == "robot" {
+		fmt.Printf("%v has %v state-values \n", p2.name, len(p2.mind.values))
+	}
 }

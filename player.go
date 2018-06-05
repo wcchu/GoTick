@@ -140,7 +140,7 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 		if p.mind.verb {
 			log.Printf("player %v(%v)'s plan board:", p.name, p.symbol)
 			printBoard(&plan)
-			log.Printf("action on %v \n\n", actionLocation)
+			log.Printf("player %v(%v) takes action at %v \n", p.name, p.symbol, actionLocation)
 		}
 	}
 	return actionLocation
