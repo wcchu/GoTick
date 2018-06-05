@@ -67,9 +67,9 @@ func runSession(p1, p2 *player, nEpisodes int) {
 	}
 	fmt.Printf("Session ends - %v won %v times; %v won %v times \n", p1.name, p1.wins, p2.name, p2.wins)
 	if p1.being == "robot" {
-		fmt.Printf("%v has %v state-values \n", p1.name, len(p1.mind.values))
+		p1.exportValues()
 	}
 	if p2.being == "robot" {
-		fmt.Printf("%v has %v state-values \n", p2.name, len(p2.mind.values))
+		p2.exportValues()
 	}
 }

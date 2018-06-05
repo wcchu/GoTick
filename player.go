@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
 	"strconv"
 )
 
@@ -63,6 +65,29 @@ func (p *player) resetHistory() {
 // updateHistory append the new state to the player's state history within the episode
 func (p *player) updateHistory(state int64) {
 	p.history = append(p.history, state)
+	return
+}
+
+// write state values of the player to a csv file
+func (p *player) exportValues() {
+	filename := p.name + "_values.csv"
+	file, err := os.Create(filename)
+	if err != nil {
+		log.Fatal("Cannot create file", err)
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	for state, value := range p.mind.values {
+		row := []string{strconv.FormatInt(state, 10), strconv.FormatFloat(value, 'g', 5, 64)}
+		err := writer.Write(row)
+		if err != nil {
+			log.Fatal("Cannot write to file", err)
+		}
+	}
+	fmt.Printf("%v's %v state values saved into %v \n", p.name, len(p.mind.values), filename)
 	return
 }
 
