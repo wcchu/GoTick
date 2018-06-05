@@ -10,16 +10,16 @@ import (
 func runEpisode(p1, p2 *player) {
 	var loc location
 	var env environment
-	var crossSpecies bool // if episode is cross-species, make reports more often
+	var withHuman bool // if episode is played by at least a human, make reports more often
 	env.initializeEnvironment()
-	if p1.being != p2.being {
-		crossSpecies = true
+	if p1.being == "human" || p2.being == "human" {
+		withHuman = true
 	}
 
 	// p1 always starts first and uses "x"
 	p1.symbol = "x"
 	p2.symbol = "o"
-	if crossSpecies {
+	if withHuman {
 		fmt.Printf("\n %v(%v) starts first \n", p1.name, p1.symbol)
 	}
 	s := "o" // current player
@@ -42,7 +42,7 @@ func runEpisode(p1, p2 *player) {
 		p2.updateHistory(state)
 	}
 
-	if crossSpecies {
+	if withHuman {
 		env.reportEpisode(p1, p2)
 	}
 

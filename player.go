@@ -34,6 +34,46 @@ type player struct {
 	mind    mind    // empty if human
 }
 
+func createPlayers() ([]player, error) {
+	var N uint
+	fmt.Print("Enter number of players: ")
+	_, errN := fmt.Scanf("%d", &N)
+	if errN == nil {
+		players := make([]player, N)
+		for i := range players {
+			var name string
+			var isRobot bool
+			// name
+			fmt.Printf("Enter name of player #%v: ", i)
+			_, errName := fmt.Scanf("%s", &name)
+			if errName != nil {
+				return []player{}, errName
+			}
+			// being
+			fmt.Printf("Robot (true/false): ")
+			_, errIsRobot := fmt.Scanf("%t", &isRobot)
+			if errIsRobot != nil {
+				return []player{}, errIsRobot
+			}
+			if isRobot {
+				// specs
+				var e, a, m, f, d float64
+				fmt.Printf("Specs (eps alp mean fluc draw): ")
+				_, errSpecs := fmt.Scanf("%f%f%f%f%f", &e, &a, &m, &f, &d)
+				if errSpecs != nil {
+					return []player{}, errSpecs
+				}
+				players[i].initializeRobot(name, robotSpecs{eps: e, alp: a, mean: m, fluc: f, draw: d}, false)
+			} else {
+				players[i].initializeHuman(name)
+			}
+		}
+		fmt.Printf("The players are: %+v", players)
+		return players, nil
+	}
+	return []player{}, errN
+}
+
 func (p *player) initializeRobot(name string, rs robotSpecs, verb bool) {
 	p.name = name
 	p.symbol = ""
@@ -94,8 +134,12 @@ func (p *player) exportValues() {
 func (p *player) playerActs(env environment) (actionLocation location) {
 	if p.being == "robot" {
 		return p.robotActs(env)
+	} else if p.being == "human" {
+		return p.humanActs(env)
 	}
-	return p.humanActs(env)
+	fmt.Printf("player %v is a non-being; the game board explodes \n", p.name)
+	os.Exit(1)
+	return
 }
 
 func (p *player) humanActs(env environment) (actionLocation location) {
