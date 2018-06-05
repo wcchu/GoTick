@@ -6,20 +6,52 @@ import (
 	"math/rand"
 )
 
+func createSessions(players []player) error {
+	for {
+		var newSess bool
+		fmt.Printf("Create a session? (t/f): ")
+		_, errS := fmt.Scanf("%t", &newSess)
+		if errS != nil {
+			return errS
+		}
+		if !newSess {
+			break
+		}
+		// start a new session
+		fmt.Print("players are: \n")
+		for i, p := range players {
+			fmt.Printf("#%v %v \n", i, p.name)
+		}
+		var i1, i2, n int
+		fmt.Printf("pick two players (# #): ")
+		_, errP := fmt.Scanf("%d%d", &i1, &i2)
+		if errP != nil {
+			return errP
+		}
+		fmt.Printf("how many episodes: ")
+		_, errE := fmt.Scanf("%d", &n)
+		if errE != nil {
+			return errE
+		}
+		runSession(&players[i1], &players[i2], n)
+	}
+	return nil
+}
+
 // run an episode and let players (if robot) remember what they've learnt
 func runEpisode(p1, p2 *player) {
 	var loc location
 	var env environment
-	var crossSpecies bool // if episode is cross-species, make reports more often
+	var withHuman bool // if episode is played by at least a human, make reports more often
 	env.initializeEnvironment()
-	if p1.being != p2.being {
-		crossSpecies = true
+	if p1.being == "human" || p2.being == "human" {
+		withHuman = true
 	}
 
 	// p1 always starts first and uses "x"
 	p1.symbol = "x"
 	p2.symbol = "o"
-	if crossSpecies {
+	if withHuman {
 		fmt.Printf("\n %v(%v) starts first \n", p1.name, p1.symbol)
 	}
 	s := "o" // current player
@@ -42,7 +74,7 @@ func runEpisode(p1, p2 *player) {
 		p2.updateHistory(state)
 	}
 
-	if crossSpecies {
+	if withHuman {
 		env.reportEpisode(p1, p2)
 	}
 
