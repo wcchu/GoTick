@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"math"
 )
@@ -13,6 +14,23 @@ type environment struct {
 	board    board
 	winner   string
 	gameOver bool
+}
+
+func (env *environment) reportEpisode(p1, p2 *player) {
+	printBoard(&env.board)
+	if env.gameOver {
+		fmt.Print("Game Over - ")
+	}
+	if env.winner != "" { // there's a winner
+		if env.winner == p1.symbol {
+			fmt.Printf("%v is the winner \n", p1.name)
+		} else {
+			fmt.Printf("%v is the winner \n", p2.name)
+		}
+	} else {
+		fmt.Print("draw \n")
+	}
+	return
 }
 
 // initializeEnvironment initializes environment

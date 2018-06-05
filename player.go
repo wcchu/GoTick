@@ -113,15 +113,15 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 			plan[irow] = make([]string, boardSize)
 			for ielement, element := range row {
 				plan[irow][ielement] = element
-				if element == "" { // location is empty; look up value if move here
-					env.board[irow][ielement] = p.symbol // assume if player moves here
+				if element == "" { // location is empty; find value if player moves here
+					env.board[irow][ielement] = p.symbol // board after this move
 					testState := env.getState(p.symbol)  // state after this move
 					testWinner := getWinner(env.board)   // winner after this move
 					testEmpties := getEmpties(env.board) // empty spots after this move
 					env.board[irow][ielement] = ""       // revert this action
 					// get value for the test state
 					testValue, ok := p.mind.values[testState]
-					if !ok { // agent has no record of this state
+					if !ok { // there's no record of this state
 						if testWinner != "" || testEmpties == 0 { // test state is final state, use reward as value
 							testValue = getReward(testWinner, p.symbol, p.mind.specs.draw)
 						} else { // test state is not final state, use default value
@@ -164,14 +164,13 @@ func (p *player) robotUpdatesValues(env environment) {
 		state := p.history[i]
 		var updatedValue float64
 		if i == len(p.history)-1 {
-			// If the state is the final state, the value is the reward. The agent should
+			// If the state is the final state, the value is the reward. The robot should
 			// just remember this state-value pair immediately.
 			updatedValue = target
 		} else {
 			// If the state is not the final state, update its value in the regular way
 			existingValue, ok := p.mind.values[state]
 			if !ok {
-				// agent has no values of this state, set to defaultValue
 				existingValue = defaultValue(p.mind.specs.mean, p.mind.specs.fluc)
 			}
 			updatedValue = existingValue + p.mind.specs.alp*(target-existingValue)
