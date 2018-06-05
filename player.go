@@ -50,7 +50,7 @@ func createPlayers() ([]player, error) {
 				return []player{}, errName
 			}
 			// being
-			fmt.Printf("Robot (true/false): ")
+			fmt.Printf("Robot? (t/f): ")
 			_, errIsRobot := fmt.Scanf("%t", &isRobot)
 			if errIsRobot != nil {
 				return []player{}, errIsRobot
@@ -68,7 +68,6 @@ func createPlayers() ([]player, error) {
 				players[i].initializeHuman(name)
 			}
 		}
-		fmt.Printf("The players are: %+v", players)
 		return players, nil
 	}
 	return []player{}, errN
@@ -146,8 +145,8 @@ func (p *player) humanActs(env environment) (actionLocation location) {
 	printBoard(&env.board)
 	for {
 		var x, y int
-		fmt.Print("Enter location (x, y): ")
-		_, err := fmt.Scanf("%d,%d", &x, &y)
+		fmt.Print("Enter location (x y): ")
+		_, err := fmt.Scanf("%d%d", &x, &y)
 		if err == nil {
 			l := location{x, y}
 			if env.board[l[0]][l[1]] == "" {

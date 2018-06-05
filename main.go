@@ -11,7 +11,7 @@ func main() {
 	players, _ := createPlayers() // TODO: report error
 
 	// create sessions
-	runSession(&players[0], &players[1], 3)
+	_ = createSessions(players) // TODO: report error
 
 	//var r2d2, termino, person player
 	//r2d2.initializeRobot("R2-D2", robotSpecs{eps: 0.1, alp: 0.8, mean: 0.5, fluc: 0.2, draw: 1.0}, false)

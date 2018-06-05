@@ -6,6 +6,38 @@ import (
 	"math/rand"
 )
 
+func createSessions(players []player) error {
+	for {
+		var newSess bool
+		fmt.Printf("Create a session? (t/f): ")
+		_, errS := fmt.Scanf("%t", &newSess)
+		if errS != nil {
+			return errS
+		}
+		if !newSess {
+			break
+		}
+		// start a new session
+		fmt.Print("players are: \n")
+		for i, p := range players {
+			fmt.Printf("#%v %v \n", i, p.name)
+		}
+		var i1, i2, n int
+		fmt.Printf("pick two players (# #): ")
+		_, errP := fmt.Scanf("%d%d", &i1, &i2)
+		if errP != nil {
+			return errP
+		}
+		fmt.Printf("how many episodes: ")
+		_, errE := fmt.Scanf("%d", &n)
+		if errE != nil {
+			return errE
+		}
+		runSession(&players[i1], &players[i2], n)
+	}
+	return nil
+}
+
 // run an episode and let players (if robot) remember what they've learnt
 func runEpisode(p1, p2 *player) {
 	var loc location
