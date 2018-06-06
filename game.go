@@ -75,9 +75,11 @@ func runSession(p1, p2 *player, nEpisodes int) error {
 	}
 	if p1.being == "robot" {
 		p1.exportValues()
+		p1.exportValueHistory()
 	}
 	if p2.being == "robot" {
 		p2.exportValues()
+		p2.exportValueHistory()
 	}
 	fmt.Printf("*** Session ends - %v won %v times / %v won %v times *** \n\n", p1.name, p1.wins, p2.name, p2.wins)
 
@@ -112,8 +114,12 @@ func runEpisode(p1, p2 *player, report bool) {
 
 		// update state history
 		state := env.getState(s)
-		p1.updateHistory(state)
-		p2.updateHistory(state)
+		p1.updateStateSequence(state)
+		p2.updateStateSequence(state)
+
+		// remember 5 oldest states
+		p1.getFiveOldestStates(state)
+		p2.getFiveOldestStates(state)
 	}
 
 	if report {

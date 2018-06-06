@@ -4,12 +4,14 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
+	"math"
 	"math/rand"
 	"os"
 	"strconv"
 )
 
-type stateValues map[int64]float64
+type stateValues map[int64]float64         // each state maps to a value
+type stateValueHistory map[int64][]float64 // each state maps to an array of values
 
 type robotSpecs struct {
 	eps  float64 // epsilon-greedy search
@@ -20,9 +22,10 @@ type robotSpecs struct {
 }
 
 type mind struct {
-	specs  robotSpecs
-	values stateValues // state values that the robot has learnt
-	verb   bool        // verbose
+	specs   robotSpecs
+	valhist stateValueHistory // historic values of N oldest states in the robot's record
+	values  stateValues       // most updated values of the robot's known states
+	verb    bool              // verbose
 }
 
 type player struct {
@@ -58,11 +61,13 @@ func createPlayers() ([]player, error) {
 			if isRobot {
 				// specs
 				var e, a, m, f, d float64
-				fmt.Printf("specs (eps alp mean fluc draw): ")
-				_, errSpecs := fmt.Scanf("%f%f%f%f%f", &e, &a, &m, &f, &d)
-				if errSpecs != nil {
-					return []player{}, errSpecs
-				}
+				//fmt.Printf("specs (eps alp mean fluc draw): ")
+				//_, errSpecs := fmt.Scanf("%f%f%f%f%f", &e, &a, &m, &f, &d)
+				//if errSpecs != nil {
+				//	return []player{}, errSpecs
+				//}
+				// temporarily use default specs
+				e, a, m, f, d = 0.1, 0.5, 0.5, 0.1, 0.5
 				players[i].initializeRobot(name, robotSpecs{eps: e, alp: a, mean: m, fluc: f, draw: d}, false)
 			} else {
 				players[i].initializeHuman(name)
@@ -81,6 +86,7 @@ func (p *player) initializeRobot(name string, rs robotSpecs, verb bool) {
 	p.history = []int64{}
 	p.wins = 0
 	p.mind.specs = rs
+	p.mind.valhist = stateValueHistory{}
 	p.mind.values = stateValues{}
 	p.mind.verb = verb
 	return
@@ -102,9 +108,16 @@ func (p *player) resetHistory() {
 	return
 }
 
-// updateHistory append the new state to the player's state history within the episode
-func (p *player) updateHistory(state int64) {
+// append the new state to the player's state history within the episode
+func (p *player) updateStateSequence(state int64) {
 	p.history = append(p.history, state)
+	return
+}
+
+func (p *player) getFiveOldestStates(state int64) {
+	if p.being == "robot" && len(p.mind.valhist) < 5 { // record up to 5 states in valhist
+		p.mind.valhist[state] = []float64{}
+	}
 	return
 }
 
@@ -128,6 +141,36 @@ func (p *player) exportValues() {
 		}
 	}
 	fmt.Printf("%v's %v state values saved into %v \n", p.name, len(p.mind.values), filename)
+	return
+}
+
+// write state values of the player to a csv file
+func (p *player) exportValueHistory() {
+	filename := p.name + "_value_hist.csv"
+	file, err := os.Create(filename)
+	if err != nil {
+		log.Fatal("Cannot create file", err)
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	for state, valueHistory := range p.mind.valhist {
+		for time, value := range valueHistory {
+			if math.Mod(float64(time), 100) == 0.0 {
+				row := []string{
+					strconv.FormatInt(state, 10),
+					strconv.Itoa(time),
+					strconv.FormatFloat(value, 'g', 5, 64)}
+				err := writer.Write(row)
+				if err != nil {
+					log.Fatal("Cannot write to file", err)
+				}
+			}
+		}
+	}
+	fmt.Printf("%v's value histories of the oldest 5 states saved into %v \n", p.name, filename)
 	return
 }
 
@@ -215,12 +258,14 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 	return actionLocation
 }
 
+// should only be run at the end of an episode
 func (p *player) updatePlayerRecord(env environment) {
 	if p.symbol == env.winner {
 		p.wins++
 	}
 	if p.being == "robot" {
 		p.updateStateValues(env)
+		p.updateStateValueHistory(env)
 	}
 	return
 }
@@ -254,7 +299,15 @@ func (p *player) updateStateValues(env environment) {
 	return
 }
 
-// defaultValue generates a value of certain mean and certain randomness
+// generate a value of certain mean and certain randomness
 func defaultValue(defaultMean, fluctuation float64) float64 {
 	return defaultMean + fluctuation*(rand.Float64()-0.5)
+}
+
+// should be run right after updateStateValues()
+func (p *player) updateStateValueHistory(env environment) {
+	for state := range p.mind.valhist {
+		p.mind.valhist[state] = append(p.mind.valhist[state], p.mind.values[state])
+	}
+	return
 }
