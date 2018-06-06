@@ -50,7 +50,7 @@ func createPlayers() ([]player, error) {
 				return []player{}, errName
 			}
 			// being
-			fmt.Printf("Robot? (t/f): ")
+			fmt.Printf("robot? (t/f): ")
 			_, errIsRobot := fmt.Scanf("%t", &isRobot)
 			if errIsRobot != nil {
 				return []player{}, errIsRobot
@@ -58,7 +58,7 @@ func createPlayers() ([]player, error) {
 			if isRobot {
 				// specs
 				var e, a, m, f, d float64
-				fmt.Printf("Specs (eps alp mean fluc draw): ")
+				fmt.Printf("specs (eps alp mean fluc draw): ")
 				_, errSpecs := fmt.Scanf("%f%f%f%f%f", &e, &a, &m, &f, &d)
 				if errSpecs != nil {
 					return []player{}, errSpecs
@@ -68,6 +68,7 @@ func createPlayers() ([]player, error) {
 				players[i].initializeHuman(name)
 			}
 		}
+		fmt.Print("*** Done creating players *** \n\n")
 		return players, nil
 	}
 	return []player{}, errN
@@ -214,16 +215,19 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 	return actionLocation
 }
 
-func (p *player) updateValues(env environment) {
+func (p *player) updatePlayerRecord(env environment) {
+	if p.symbol == env.winner {
+		p.wins++
+	}
 	if p.being == "robot" {
-		p.robotUpdatesValues(env)
+		p.updateStateValues(env)
 	}
 	return
 }
 
-// robotUpdatesvalues should only be run at the end of an episode
-// Use the update rule: V(s) = V(s) + alpha*(V(s') - V(s))
-func (p *player) robotUpdatesValues(env environment) {
+// should only be run at the end of an episode
+// update rule: V(s) = V(s) + alpha*(V(s') - V(s))
+func (p *player) updateStateValues(env environment) {
 	reward := getReward(env.winner, p.symbol, p.mind.specs.draw)
 	target := reward
 	// loop backward from the last state to the first along history
@@ -245,9 +249,6 @@ func (p *player) robotUpdatesValues(env environment) {
 		}
 		p.mind.values[state] = updatedValue
 		target = updatedValue
-	}
-	if env.winner == p.symbol {
-		p.wins++
 	}
 	p.resetHistory() // state history is reset but values of state values is kept
 	return

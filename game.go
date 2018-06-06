@@ -18,7 +18,7 @@ func createSessions(players []player) error {
 			break
 		}
 		// start a new session
-		fmt.Print("players are: \n")
+		fmt.Print("vailable players are: \n")
 		for i, p := range players {
 			fmt.Printf("#%v %v \n", i, p.name)
 		}
@@ -33,25 +33,67 @@ func createSessions(players []player) error {
 		if errE != nil {
 			return errE
 		}
-		runSession(&players[i1], &players[i2], n)
+		// run session
+		err := runSession(&players[i1], &players[i2], n)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
+func runSession(p1, p2 *player, nEpisodes int) error {
+	// set up reporting parameters
+	r := false                // report more frequently
+	v := false                // robot is verbose
+	if p1.being != p2.being { // human vs robot
+		r = true // report more frequently
+		fmt.Printf("set robot to verbose? (t/f): ")
+		_, errV := fmt.Scanf("%t", &v)
+		if errV != nil {
+			return errV
+		}
+	}
+	if p1.being == "robot" {
+		p1.mind.verb = v
+	}
+	if p2.being == "robot" {
+		p2.mind.verb = v
+	}
+
+	// run episodes
+	for episode := 0; episode < nEpisodes; episode++ {
+		if math.Mod(float64(episode+1), 1000) == 0 && p1.being == p2.being {
+			fmt.Printf("episode #%v \n", episode)
+		}
+		// for each episode, randomly pick the first player
+		if rand.Float64() < 0.5 {
+			runEpisode(p1, p2, r)
+		} else {
+			runEpisode(p2, p1, r)
+		}
+	}
+	if p1.being == "robot" {
+		p1.exportValues()
+	}
+	if p2.being == "robot" {
+		p2.exportValues()
+	}
+	fmt.Printf("*** Session ends - %v won %v times / %v won %v times *** \n\n", p1.name, p1.wins, p2.name, p2.wins)
+
+	return nil
+}
+
 // run an episode and let players (if robot) remember what they've learnt
-func runEpisode(p1, p2 *player) {
+func runEpisode(p1, p2 *player, report bool) {
 	var loc location
 	var env environment
-	var withHuman bool // if episode is played by at least a human, make reports more often
 	env.initializeEnvironment()
-	if p1.being == "human" || p2.being == "human" {
-		withHuman = true
-	}
 
 	// p1 always starts first and uses "x"
 	p1.symbol = "x"
 	p2.symbol = "o"
-	if withHuman {
+	if report {
 		fmt.Printf("\n %v(%v) starts first \n", p1.name, p1.symbol)
 	}
 	s := "o" // current player
@@ -74,34 +116,13 @@ func runEpisode(p1, p2 *player) {
 		p2.updateHistory(state)
 	}
 
-	if withHuman {
+	if report {
 		env.reportEpisode(p1, p2)
 	}
 
 	// grow some brain
-	p1.updateValues(env)
-	p2.updateValues(env)
+	p1.updatePlayerRecord(env)
+	p2.updatePlayerRecord(env)
 
 	return
-}
-
-func runSession(p1, p2 *player, nEpisodes int) {
-	for episode := 0; episode < nEpisodes; episode++ {
-		if math.Mod(float64(episode+1), 1000) == 0 {
-			fmt.Printf("episode #%v \n", episode)
-		}
-		// for each episode, randomly pick the first player
-		if rand.Float64() < 0.5 {
-			runEpisode(p1, p2)
-		} else {
-			runEpisode(p2, p1)
-		}
-	}
-	fmt.Printf("Session ends - %v won %v times; %v won %v times \n", p1.name, p1.wins, p2.name, p2.wins)
-	if p1.being == "robot" {
-		p1.exportValues()
-	}
-	if p2.being == "robot" {
-		p2.exportValues()
-	}
 }
