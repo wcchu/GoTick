@@ -50,7 +50,7 @@ func createPlayers() ([]player, error) {
 				return []player{}, errName
 			}
 			// being
-			fmt.Printf("Robot? (t/f): ")
+			fmt.Printf("robot? (t/f): ")
 			_, errIsRobot := fmt.Scanf("%t", &isRobot)
 			if errIsRobot != nil {
 				return []player{}, errIsRobot
@@ -58,7 +58,7 @@ func createPlayers() ([]player, error) {
 			if isRobot {
 				// specs
 				var e, a, m, f, d float64
-				fmt.Printf("Specs (eps alp mean fluc draw): ")
+				fmt.Printf("specs (eps alp mean fluc draw): ")
 				_, errSpecs := fmt.Scanf("%f%f%f%f%f", &e, &a, &m, &f, &d)
 				if errSpecs != nil {
 					return []player{}, errSpecs
@@ -68,6 +68,7 @@ func createPlayers() ([]player, error) {
 				players[i].initializeHuman(name)
 			}
 		}
+		fmt.Print("done creating players \n")
 		return players, nil
 	}
 	return []player{}, errN
