@@ -1,10 +1,10 @@
 library(tidyverse)
 
 memory1 <-
-  read.csv('robot1_values.csv', stringsAsFactors = FALSE, header = FALSE) %>%
+  read.csv('r2d2_values.csv', stringsAsFactors = FALSE, header = FALSE) %>%
   select(state = V1, value1 = V2)
 memory2 <-
-  read.csv('robot2_values.csv', stringsAsFactors = FALSE, header = FALSE) %>%
+  read.csv('termino_values.csv', stringsAsFactors = FALSE, header = FALSE) %>%
   select(state = V1, value2 = V2)
 
 memory <-
