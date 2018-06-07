@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
-	"math"
 	"math/rand"
 	"os"
 	"strconv"
@@ -124,8 +123,8 @@ func (p *player) updateStateSequence(state int64) {
 	return
 }
 
-func (p *player) getFiveOldestStates(state int64) {
-	if p.being == "robot" && len(p.mind.valhist) < 5 { // record up to 5 states in valhist
+func (p *player) getOldestNStates(state int64, N int) {
+	if p.being == "robot" && len(p.mind.valhist) < N { // record up to N states in valhist
 		p.mind.valhist[state] = []float64{}
 	}
 	return
@@ -168,15 +167,13 @@ func (p *player) exportValueHistory() {
 
 	for state, valueHistory := range p.mind.valhist {
 		for time, value := range valueHistory {
-			if math.Mod(float64(time), 100) == 0.0 {
-				row := []string{
-					strconv.FormatInt(state, 10),
-					strconv.Itoa(time),
-					strconv.FormatFloat(value, 'g', 5, 64)}
-				err := writer.Write(row)
-				if err != nil {
-					log.Fatal("Cannot write to file", err)
-				}
+			row := []string{
+				strconv.FormatInt(state, 10),
+				strconv.Itoa(time),
+				strconv.FormatFloat(value, 'g', 5, 64)}
+			err := writer.Write(row)
+			if err != nil {
+				log.Fatal("Cannot write to file", err)
 			}
 		}
 	}
@@ -204,7 +201,7 @@ func (p *player) humanActs(env environment) (actionLocation location) {
 		if err == nil {
 			l := location{x, y}
 			if env.board[l[0]][l[1]] == "" {
-				log.Printf("You are making a move to %v", l)
+				fmt.Printf("you are making a move to %v \n", l)
 				return l
 			}
 		}
@@ -260,9 +257,9 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 			}
 		}
 		if p.mind.verb {
-			log.Printf("player %v(%v)'s plan board:", p.name, p.symbol)
+			fmt.Printf("player %v(%v)'s plan board: \n", p.name, p.symbol)
 			printBoard(&plan)
-			log.Printf("player %v(%v) takes action at %v \n", p.name, p.symbol, actionLocation)
+			fmt.Printf("player %v(%v) takes action at %v \n", p.name, p.symbol, actionLocation)
 		}
 	}
 	return actionLocation
