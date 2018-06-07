@@ -6,52 +6,68 @@ import (
 	"math/rand"
 )
 
-func createSessions(players []player) error {
+func createSessions(players []player) {
 	for {
+
+		// user input
 		var newSess bool
-		fmt.Printf("Create a session? (t/f): ")
-		_, errS := fmt.Scanf("%t", &newSess)
-		if errS != nil {
-			return errS
+		for {
+			fmt.Printf("Create a session? (t/f): ")
+			_, err := fmt.Scanf("%t", &newSess)
+			if err == nil {
+				break
+			}
 		}
 		if !newSess {
 			break
 		}
+
 		// start a new session
-		fmt.Print("vailable players are: \n")
+		fmt.Print("available players are: \n")
 		for i, p := range players {
 			fmt.Printf("#%v %v \n", i, p.name)
 		}
 		var i1, i2, n int
-		fmt.Printf("pick two players (# #): ")
-		_, errP := fmt.Scanf("%d%d", &i1, &i2)
-		if errP != nil {
-			return errP
+		if len(players) > 2 { // more than 2 available players, choose 2
+			for {
+				fmt.Printf("pick two players (# #): ")
+				_, err := fmt.Scanf("%d%d", &i1, &i2)
+				if err == nil {
+					break
+				}
+			}
+		} else {
+			i1, i2 = 0, 1
 		}
-		fmt.Printf("how many episodes: ")
-		_, errE := fmt.Scanf("%d", &n)
-		if errE != nil {
-			return errE
+
+		for {
+			fmt.Printf("how many episodes: ")
+			_, err := fmt.Scanf("%d", &n)
+			if err == nil {
+				break
+			}
 		}
+
 		// run session
-		err := runSession(&players[i1], &players[i2], n)
-		if err != nil {
-			return err
-		}
+		fmt.Printf("*** Session starts: %v and %v play %v episodes *** \n", players[i1].name, players[i2].name, n)
+		runSession(&players[i1], &players[i2], n)
 	}
-	return nil
+
+	return
 }
 
-func runSession(p1, p2 *player, nEpisodes int) error {
+func runSession(p1, p2 *player, nEpisodes int) {
 	// set up reporting parameters
 	r := false                // report more frequently
 	v := false                // robot is verbose
 	if p1.being != p2.being { // human vs robot
 		r = true // report more frequently
-		fmt.Printf("set robot to verbose? (t/f): ")
-		_, errV := fmt.Scanf("%t", &v)
-		if errV != nil {
-			return errV
+		for {
+			fmt.Printf("set robot to verbose? (t/f): ")
+			_, err := fmt.Scanf("%t", &v)
+			if err == nil {
+				break
+			}
 		}
 	}
 	if p1.being == "robot" {
@@ -83,7 +99,7 @@ func runSession(p1, p2 *player, nEpisodes int) error {
 	}
 	fmt.Printf("*** Session ends - %v won %v times / %v won %v times *** \n\n", p1.name, p1.wins, p2.name, p2.wins)
 
-	return nil
+	return
 }
 
 // run an episode and let players (if robot) remember what they've learnt

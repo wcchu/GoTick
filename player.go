@@ -37,46 +37,54 @@ type player struct {
 	mind    mind    // empty if human
 }
 
-func createPlayers() ([]player, error) {
+func createPlayers() []player {
+	// number of players
 	var N uint
-	fmt.Print("Enter number of players: ")
-	_, errN := fmt.Scanf("%d", &N)
-	if errN == nil {
-		players := make([]player, N)
-		for i := range players {
-			var name string
-			var isRobot bool
-			// name
+	for {
+		fmt.Print("Enter number of players: ")
+		_, err := fmt.Scanf("%d", &N)
+		if err == nil {
+			break
+		}
+	}
+
+	// define each player
+	players := make([]player, N)
+	for i := range players {
+		var name string
+		var isRobot bool
+		// name
+		for {
 			fmt.Printf("Enter name of player #%v: ", i)
-			_, errName := fmt.Scanf("%s", &name)
-			if errName != nil {
-				return []player{}, errName
-			}
-			// being
-			fmt.Printf("robot? (t/f): ")
-			_, errIsRobot := fmt.Scanf("%t", &isRobot)
-			if errIsRobot != nil {
-				return []player{}, errIsRobot
-			}
-			if isRobot {
-				// specs
-				var e, a, m, f, d float64
-				//fmt.Printf("specs (eps alp mean fluc draw): ")
-				//_, errSpecs := fmt.Scanf("%f%f%f%f%f", &e, &a, &m, &f, &d)
-				//if errSpecs != nil {
-				//	return []player{}, errSpecs
-				//}
-				// temporarily use default specs
-				e, a, m, f, d = 0.1, 0.5, 0.5, 0.1, 0.5
-				players[i].initializeRobot(name, robotSpecs{eps: e, alp: a, mean: m, fluc: f, draw: d}, false)
-			} else {
-				players[i].initializeHuman(name)
+			_, err := fmt.Scanf("%s", &name)
+			if err == nil {
+				break
 			}
 		}
-		fmt.Print("*** Done creating players *** \n\n")
-		return players, nil
+		// being
+		for {
+			fmt.Printf("robot? (t/f): ")
+			_, err := fmt.Scanf("%t", &isRobot)
+			if err == nil {
+				break
+			}
+		}
+		if isRobot {
+			// specs
+			var e, a, m, f, d float64
+			fmt.Printf("specs (eps alp mean fluc draw) / click enter to use default values: ")
+			_, err := fmt.Scanf("%f%f%f%f%f", &e, &a, &m, &f, &d)
+			if err != nil {
+				e, a, m, f, d = 0.1, 0.5, 0.5, 0.1, 0.5
+				fmt.Printf("use default specs %v %v %v %v %v \n", e, a, m, f, d)
+			}
+			players[i].initializeRobot(name, robotSpecs{eps: e, alp: a, mean: m, fluc: f, draw: d}, false)
+		} else {
+			players[i].initializeHuman(name)
+		}
 	}
-	return []player{}, errN
+	fmt.Print("*** Done creating players *** \n\n")
+	return players
 }
 
 func (p *player) initializeRobot(name string, rs robotSpecs, verb bool) {
@@ -180,7 +188,7 @@ func (p *player) playerActs(env environment) (actionLocation location) {
 	} else if p.being == "human" {
 		return p.humanActs(env)
 	}
-	fmt.Printf("player %v is a non-being; the game board explodes \n", p.name)
+	fmt.Printf("player %v is an unknown creature; the game board explodes \n", p.name)
 	os.Exit(1)
 	return
 }

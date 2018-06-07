@@ -8,9 +8,9 @@ var symbols = [2]string{"x", "o"} // player symbols on the board
 func main() {
 
 	// create players
-	players, _ := createPlayers() // TODO: report error
+	players := createPlayers() // TODO: report error
 
 	// create sessions
-	_ = createSessions(players) // TODO: report error
+	createSessions(players) // TODO: report error
 
 }
