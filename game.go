@@ -50,17 +50,17 @@ func createSessions(players []player) {
 
 		// run session
 		fmt.Printf("*** Session starts: %v and %v play %v episodes *** \n", players[i1].name, players[i2].name, n)
-		runSession(&players[i1], &players[i2], n)
+		runSession(&playerPair{players[i1], players[i2]}, n)
 	}
 
 	return
 }
 
-func runSession(p1, p2 *player, nEpisodes int) {
+func runSession(ps *playerPair, nEpisodes int) {
 	// set up reporting parameters
-	r := false                // report more frequently
-	v := false                // robot is verbose
-	if p1.being != p2.being { // human vs robot
+	r := false                      // report more frequently
+	v := false                      // robot is verbose
+	if ps[0].being != ps[1].being { // human vs robot
 		r = true // report more frequently
 		for {
 			fmt.Printf("set robot to verbose? (t/f): ")
@@ -70,81 +70,77 @@ func runSession(p1, p2 *player, nEpisodes int) {
 			}
 		}
 	}
-	if p1.being == "robot" {
-		p1.mind.verb = v
-	}
-	if p2.being == "robot" {
-		p2.mind.verb = v
+	for i := range ps {
+		if ps[i].being == "robot" {
+			ps[i].mind.verb = v
+		}
 	}
 
 	// run episodes
 	for episode := 0; episode < nEpisodes; episode++ {
-		if math.Mod(float64(episode+1), 1000) == 0 && p1.being == p2.being {
+		if math.Mod(float64(episode+1), 1000) == 0 && ps[0].being == ps[1].being {
 			fmt.Printf("episode #%v \n", episode)
 		}
-		// for each episode, randomly pick the first player
-		if rand.Float64() < 0.5 {
-			runEpisode(p1, p2, r)
-		} else {
-			runEpisode(p2, p1, r)
+		runEpisode(ps, r)
+	}
+
+	// robot export values
+	for i := range ps {
+		if ps[i].being == "robot" {
+			ps[i].exportValues()
+			ps[i].exportValueHistory()
 		}
 	}
-	if p1.being == "robot" {
-		p1.exportValues()
-		p1.exportValueHistory()
-	}
-	if p2.being == "robot" {
-		p2.exportValues()
-		p2.exportValueHistory()
-	}
-	fmt.Printf("*** Session ends - %v won %v times / %v won %v times *** \n\n", p1.name, p1.wins, p2.name, p2.wins)
+	fmt.Printf("*** Session ends - %v won %v times / %v won %v times *** \n\n", ps[0].name, ps[0].wins, ps[1].name, ps[1].wins)
 
 	return
 }
 
 // run an episode and let players (if robot) remember what they've learnt
-func runEpisode(p1, p2 *player, report bool) {
+func runEpisode(ps *playerPair, report bool) {
 	var loc location
 	var env environment
 	env.initializeEnvironment()
 
-	// p1 always starts first and uses "x"
-	p1.symbol = "x"
-	p2.symbol = "o"
+	// randomly assign 0 or 1 as the first player ("x")
+	first := rand.Perm(2)[0]
+	second := 1 - first
+
+	// first player uses "x"
+	ps[first].symbol = "x"
+	ps[second].symbol = "o"
 	if report {
-		fmt.Printf("\n %v(%v) starts first \n", p1.name, p1.symbol)
+		fmt.Printf("\n %v(%v) starts first \n", ps[first].name, ps[first].symbol)
 	}
 	s := "o" // current player
 	for !env.gameOver {
 		// switch player and take action
 		if s == "o" {
 			s = "x"
-			loc = p1.playerActs(env)
+			loc = ps[first].playerActs(env)
 		} else {
 			s = "o"
-			loc = p2.playerActs(env)
+			loc = ps[second].playerActs(env)
 		}
 
 		// update environment by the action
 		env.updateGameStatus(loc, s)
 
-		// update state history
+		// update state history and remember the oldest 5 states
 		state := env.getState(s)
-		p1.updateStateSequence(state)
-		p2.updateStateSequence(state)
-
-		// remember 5 oldest states
-		p1.getFiveOldestStates(state)
-		p2.getFiveOldestStates(state)
+		for i := range ps {
+			ps[i].updateStateSequence(state)
+			ps[i].getFiveOldestStates(state)
+		}
 	}
 
 	if report {
-		env.reportEpisode(p1, p2)
+		env.reportEpisode(&ps[first], &ps[second])
 	}
 
 	// grow some brain
-	p1.updatePlayerRecord(env)
-	p2.updatePlayerRecord(env)
+	ps[first].updatePlayerRecord(env)
+	ps[second].updatePlayerRecord(env)
 
 	return
 }

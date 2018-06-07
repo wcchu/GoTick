@@ -37,6 +37,8 @@ type player struct {
 	mind    mind    // empty if human
 }
 
+type playerPair [2]player
+
 func createPlayers() []player {
 	// number of players
 	var N uint
@@ -148,7 +150,7 @@ func (p *player) exportValues() {
 			log.Fatal("Cannot write to file", err)
 		}
 	}
-	fmt.Printf("%v's %v state values saved into %v \n", p.name, len(p.mind.values), filename)
+	fmt.Printf("%v has %v state-values, saved into %v \n", p.name, len(p.mind.values), filename)
 	return
 }
 
