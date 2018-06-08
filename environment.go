@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"math"
 )
 
@@ -17,7 +16,7 @@ type environment struct {
 }
 
 func (env *environment) reportEpisode(p1, p2 *player) {
-	printBoard(&env.board)
+	printBoard(&env.board, true)
 	if env.gameOver {
 		fmt.Print("Game Over - ")
 	}
@@ -124,19 +123,26 @@ func padSymbol(s string) string {
 	return s
 }
 
-// printBoard prints the board with players on it
-func printBoard(b *board) {
-	// draw board
+// print the board with players on it
+func printBoard(b *board, toScreen bool) string {
+	var content string
 	for _, row := range *b {
-		log.Print("-------------------")
+		content += "------------------- \n"
+		//fmt.Println("-------------------")
 		rowPrint := "|"
 		for _, element := range row {
 			rowPrint += padSymbol(element)
 		}
-		log.Print(rowPrint)
+		content += rowPrint
+		content += "\n"
+		//fmt.Println(rowPrint)
 	}
-	log.Print("-------------------")
-	return
+	content += "------------------- \n"
+	//fmt.Println("-------------------")
+	if toScreen {
+		fmt.Print(content)
+	}
+	return content
 }
 
 // rowFilled checks whether all elements in a string array are equal to a certain string

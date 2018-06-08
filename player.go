@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/csv"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
@@ -155,17 +156,23 @@ func (p *player) exportValues() {
 
 // write state values of the player to a csv file
 func (p *player) exportValueHistory() {
-	filename := p.name + "_value_hist.csv"
+	filename := p.name + "_oldest_states_hist.csv"
 	file, err := os.Create(filename)
 	if err != nil {
 		log.Fatal("Cannot create file", err)
 	}
 	defer file.Close()
-
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
+	filename2 := p.name + "_oldest_states.txt"
+
+	var s string
 	for state, valueHistory := range p.mind.valhist {
+
+		b := stateToBoard(state, p.symbol)
+		s = s + strconv.FormatInt(state, 10) + "\n" + printBoard(&b, false) + "\n"
+
 		for time, value := range valueHistory {
 			row := []string{
 				strconv.FormatInt(state, 10),
@@ -177,6 +184,10 @@ func (p *player) exportValueHistory() {
 			}
 		}
 	}
+
+	d := []byte(s)
+	ioutil.WriteFile(filename2, d, 0644)
+
 	fmt.Printf("%v's value histories of the oldest N states saved into %v \n", p.name, filename)
 	return
 }
@@ -193,7 +204,7 @@ func (p *player) playerActs(env environment) (actionLocation location) {
 }
 
 func (p *player) humanActs(env environment) (actionLocation location) {
-	printBoard(&env.board)
+	printBoard(&env.board, true)
 	for {
 		var x, y int
 		fmt.Print("Enter location (x y): ")
@@ -258,7 +269,7 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 		}
 		if p.mind.verb || printSteps {
 			fmt.Printf("player %v(%v)'s plan board: \n", p.name, p.symbol)
-			printBoard(&plan)
+			printBoard(&plan, true)
 			fmt.Printf("player %v(%v) takes action at %v \n", p.name, p.symbol, actionLocation)
 		}
 	}
