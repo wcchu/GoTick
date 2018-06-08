@@ -48,9 +48,9 @@ func (env *environment) initializeEnvironment() {
 // hash the game board in the player's perspective into an integer
 // NOTE: For each player, each location's status is viewed only as occupied either by him/herself or
 //       by the opponent, regardless of the actual symbol ("x" or "o") there.
-func (env *environment) boardToState(symbol string) int64 {
+func boardToState(b *board, symbol string) int64 {
 	var k, h, v int64
-	for _, row := range env.board {
+	for _, row := range *b {
 		for _, element := range row {
 			if element == symbol { // occupied by current player
 				v = 0
@@ -68,26 +68,21 @@ func (env *environment) boardToState(symbol string) int64 {
 
 //
 func stateToBoard(h int64, symbol string) board {
-	b := make(board, boardSize)
-
-	var v int64
+	// assign opponent's symbol
 	var otherSymbol string
-
 	if symbol == "x" {
 		otherSymbol = "o"
 	} else {
 		otherSymbol = "x"
 	}
 
+	b := make(board, boardSize)
 	k := boardSize*boardSize - 1
 	for irow := boardSize - 1; irow >= 0; irow-- {
 		r := make([]string, boardSize)
 		for ielement := boardSize - 1; ielement >= 0; ielement-- {
-			intPart, _ := math.Modf(float64(h) / math.Pow(3, float64(k)))
-			v = int64(intPart)
-
-			fmt.Printf("h = %v, v = %v; ", h, v)
-
+			base := int64(math.Pow(3, float64(k)))
+			v := h / base
 			if v == 0 {
 				r[ielement] = symbol
 			} else if v == 1 {
@@ -95,14 +90,11 @@ func stateToBoard(h int64, symbol string) board {
 			} else {
 				r[ielement] = otherSymbol
 			}
-			h = h - v
+			h -= v * base
 			k--
 		}
-
 		b[irow] = r
-		fmt.Printf("row = %+v \n", r)
 	}
-
 	return b
 }
 

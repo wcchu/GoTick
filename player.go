@@ -170,8 +170,8 @@ func (p *player) exportValueHistory() {
 	for state, valueHistory := range p.mind.valhist {
 
 		fmt.Printf("state %v \n", state)
-		_ = stateToBoard(state, p.symbol)
-		//printBoard(&b)
+		b := stateToBoard(state, p.symbol)
+		printBoard(&b)
 
 		for time, value := range valueHistory {
 			row := []string{
@@ -240,11 +240,11 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 			for ielement, element := range row {
 				plan[irow][ielement] = element
 				if element == "" { // location is empty; find value if player moves here
-					env.board[irow][ielement] = p.symbol    // board after this move
-					testState := env.boardToState(p.symbol) // state after this move
-					testWinner := getWinner(env.board)      // winner after this move
-					testEmpties := getEmpties(env.board)    // empty spots after this move
-					env.board[irow][ielement] = ""          // revert this action
+					env.board[irow][ielement] = p.symbol            // board after this move
+					testState := boardToState(&env.board, p.symbol) // state after this move
+					testWinner := getWinner(env.board)              // winner after this move
+					testEmpties := getEmpties(env.board)            // empty spots after this move
+					env.board[irow][ielement] = ""                  // revert this action
 					// get value for the test state
 					testValue, ok := p.mind.values[testState]
 					if !ok { // there's no record of this state
