@@ -127,7 +127,7 @@ func runEpisode(ps *playerPair, report bool) {
 		env.updateGameStatus(loc, s)
 
 		// update state history and remember the oldest 9 states
-		state := env.getState(s)
+		state := env.boardToState(s)
 		for i := range ps {
 			ps[i].updateStateSequence(state)
 			ps[i].getOldestNStates(state, 9)
