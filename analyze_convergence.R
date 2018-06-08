@@ -15,8 +15,6 @@ conv <-
 conv$state <- as.character(conv$state)
 
 plot <-
-  ggplot(conv) +
-  geom_line(aes(x = time, y = value, color = state), size = 1) +
-  facet_grid(player ~ .) +
-  xlim(0,10000)
+  ggplot(conv %>% filter(player == "r2d2")) +
+  geom_line(aes(x = time, y = value, color = state), size = 1)
 print(plot)
