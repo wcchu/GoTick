@@ -123,8 +123,8 @@ func (p *player) updateStateSequence(state int64) {
 	return
 }
 
-func (p *player) getOldestNStates(state int64, N int) {
-	if p.being == "robot" && len(p.mind.valhist) < N { // record up to N states in valhist
+func (p *player) getOldestNStates(state int64) {
+	if p.being == "robot" && len(p.mind.valhist) < nOldest { // record up to N states in valhist
 		p.mind.valhist[state] = []float64{}
 	}
 	return
@@ -165,14 +165,7 @@ func (p *player) exportValueHistory() {
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
-	fmt.Print("the oldest N states: \n")
-
 	for state, valueHistory := range p.mind.valhist {
-
-		fmt.Printf("state %v \n", state)
-		b := stateToBoard(state, p.symbol)
-		printBoard(&b)
-
 		for time, value := range valueHistory {
 			row := []string{
 				strconv.FormatInt(state, 10),
@@ -263,7 +256,7 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 				}
 			}
 		}
-		if p.mind.verb {
+		if p.mind.verb || printSteps {
 			fmt.Printf("player %v(%v)'s plan board: \n", p.name, p.symbol)
 			printBoard(&plan)
 			fmt.Printf("player %v(%v) takes action at %v \n", p.name, p.symbol, actionLocation)

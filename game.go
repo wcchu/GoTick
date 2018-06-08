@@ -100,6 +100,9 @@ func runSession(ps *playerPair, nEpisodes int) {
 func runEpisode(ps *playerPair, report bool) {
 	var loc location
 	var env environment
+	if printSteps { // global const to force reporting
+		report = true
+	}
 	env.initializeEnvironment()
 
 	// randomly assign 0 or 1 as the first player ("x")
@@ -127,10 +130,12 @@ func runEpisode(ps *playerPair, report bool) {
 		env.updateGameStatus(loc, s)
 
 		// update state history and remember the oldest 9 states
-		state := boardToState(&env.board,s)
 		for i := range ps {
+			// The same board is encoded differently by the two players;
+			// each location is viewed not as "x" or "o", but instead as Me or You.
+			state := boardToState(&env.board, ps[i].symbol)
 			ps[i].updateStateSequence(state)
-			ps[i].getOldestNStates(state, 9)
+			ps[i].getOldestNStates(state)
 		}
 	}
 
