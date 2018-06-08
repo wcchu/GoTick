@@ -165,7 +165,14 @@ func (p *player) exportValueHistory() {
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
+	fmt.Print("the oldest N states: \n")
+
 	for state, valueHistory := range p.mind.valhist {
+
+		fmt.Printf("state %v \n", state)
+		b := stateToBoard(state, p.symbol)
+		printBoard(&b)
+
 		for time, value := range valueHistory {
 			row := []string{
 				strconv.FormatInt(state, 10),
@@ -177,7 +184,7 @@ func (p *player) exportValueHistory() {
 			}
 		}
 	}
-	fmt.Printf("%v's value histories of the oldest 5 states saved into %v \n", p.name, filename)
+	fmt.Printf("%v's value histories of the oldest N states saved into %v \n", p.name, filename)
 	return
 }
 
@@ -233,11 +240,11 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 			for ielement, element := range row {
 				plan[irow][ielement] = element
 				if element == "" { // location is empty; find value if player moves here
-					env.board[irow][ielement] = p.symbol // board after this move
-					testState := env.getState(p.symbol)  // state after this move
-					testWinner := getWinner(env.board)   // winner after this move
-					testEmpties := getEmpties(env.board) // empty spots after this move
-					env.board[irow][ielement] = ""       // revert this action
+					env.board[irow][ielement] = p.symbol            // board after this move
+					testState := boardToState(&env.board, p.symbol) // state after this move
+					testWinner := getWinner(env.board)              // winner after this move
+					testEmpties := getEmpties(env.board)            // empty spots after this move
+					env.board[irow][ielement] = ""                  // revert this action
 					// get value for the test state
 					testValue, ok := p.mind.values[testState]
 					if !ok { // there's no record of this state
