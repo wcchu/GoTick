@@ -15,7 +15,8 @@ type environment struct {
 	gameOver bool
 }
 
-func (env *environment) reportEpisode(p1, p2 *player) {
+// report the summary of the episode
+func (env *environment) summarizeEpisode(p1, p2 *player) {
 	printBoard(&env.board, true)
 	if env.gameOver {
 		fmt.Print("Game Over - ")
@@ -32,7 +33,7 @@ func (env *environment) reportEpisode(p1, p2 *player) {
 	return
 }
 
-// initializeEnvironment initializes environment
+// initialize environment
 func (env *environment) initializeEnvironment() {
 	board := make(board, boardSize)
 	for irow := range board {
@@ -44,7 +45,7 @@ func (env *environment) initializeEnvironment() {
 	return
 }
 
-// hash the game board in the player's perspective into an integer
+// encode the game board into an integer (state id)
 // NOTE: For each player, each location's status is viewed only as occupied either by him/herself or
 //       by the opponent, regardless of the actual symbol ("x" or "o") there.
 func boardToState(b *board, symbol string) int64 {
@@ -65,7 +66,7 @@ func boardToState(b *board, symbol string) int64 {
 	return h
 }
 
-//
+// decode the state id to reconstruct the board
 func stateToBoard(h int64, symbol string) board {
 	// assign opponent's symbol
 	var otherSymbol string
@@ -97,7 +98,7 @@ func stateToBoard(h int64, symbol string) board {
 	return b
 }
 
-// updateGameStatus looks at the board following a move and updates the winner and the game-over
+// examine the board following a move and updates the winner and the game-over
 func (env *environment) updateGameStatus(loc location, symbol string) {
 	// add new move on the board
 	env.board[loc[0]][loc[1]] = symbol
@@ -111,6 +112,7 @@ func (env *environment) updateGameStatus(loc location, symbol string) {
 	return
 }
 
+// pad symbol of a location to prepare for printing
 func padSymbol(s string) string {
 	if len(s) == 0 {
 		s = "     "
@@ -145,7 +147,7 @@ func printBoard(b *board, toScreen bool) string {
 	return content
 }
 
-// rowFilled checks whether all elements in a string array are equal to a certain string
+// check whether all elements in a string array are equal to a certain string
 func rowFilled(array []string, s string) bool {
 	for _, element := range array {
 		if element != s {

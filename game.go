@@ -140,7 +140,7 @@ func runEpisode(ps *playerPair, report bool) {
 	}
 
 	if report {
-		env.reportEpisode(&ps[first], &ps[second])
+		env.summarizeEpisode(&ps[first], &ps[second])
 	}
 
 	// grow some brain

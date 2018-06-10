@@ -221,7 +221,7 @@ func (p *player) humanActs(env environment) (actionLocation location) {
 	}
 }
 
-// robotActs determines what location the robot moves to
+// determine what location the robot moves to
 func (p *player) robotActs(env environment) (actionLocation location) {
 	if rand.Float64() < p.mind.specs.eps {
 		// take a random action
@@ -276,7 +276,7 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 	return actionLocation
 }
 
-// should only be run at the end of an episode
+// append the state-values learnt in each episode to the player's memory
 func (p *player) updatePlayerRecord(env environment) {
 	if p.symbol == env.winner {
 		p.wins++
