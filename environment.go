@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"math"
 )
 
@@ -16,8 +15,9 @@ type environment struct {
 	gameOver bool
 }
 
-func (env *environment) reportEpisode(p1, p2 *player) {
-	printBoard(&env.board)
+// report the summary of the episode
+func (env *environment) summarizeEpisode(p1, p2 *player) {
+	printBoard(&env.board, true)
 	if env.gameOver {
 		fmt.Print("Game Over - ")
 	}
@@ -33,7 +33,7 @@ func (env *environment) reportEpisode(p1, p2 *player) {
 	return
 }
 
-// initializeEnvironment initializes environment
+// initialize environment
 func (env *environment) initializeEnvironment() {
 	board := make(board, boardSize)
 	for irow := range board {
@@ -45,12 +45,12 @@ func (env *environment) initializeEnvironment() {
 	return
 }
 
-// getState hashes the game board in the player's perspective into an integer
+// encode the game board into an integer (state id)
 // NOTE: For each player, each location's status is viewed only as occupied either by him/herself or
 //       by the opponent, regardless of the actual symbol ("x" or "o") there.
-func (env *environment) getState(symbol string) int64 {
+func boardToState(b *board, symbol string) int64 {
 	var k, h, v int64
-	for _, row := range env.board {
+	for _, row := range *b {
 		for _, element := range row {
 			if element == symbol { // occupied by current player
 				v = 0
@@ -59,14 +59,46 @@ func (env *environment) getState(symbol string) int64 {
 			} else { // occupied by opponent
 				v = 2
 			}
-			h = h + int64(math.Pow(3, float64(k)))*v
-			k = k + 1
+			h += int64(math.Pow(3, float64(k))) * v
+			k++
 		}
 	}
 	return h
 }
 
-// updateGameStatus looks at the board following a move and updates the winner and the game-over
+// decode the state id to reconstruct the board
+func stateToBoard(h int64, symbol string) board {
+	// assign opponent's symbol
+	var otherSymbol string
+	if symbol == "x" {
+		otherSymbol = "o"
+	} else {
+		otherSymbol = "x"
+	}
+
+	b := make(board, boardSize)
+	k := boardSize*boardSize - 1
+	for irow := boardSize - 1; irow >= 0; irow-- {
+		r := make([]string, boardSize)
+		for ielement := boardSize - 1; ielement >= 0; ielement-- {
+			base := int64(math.Pow(3, float64(k)))
+			v := h / base
+			if v == 0 {
+				r[ielement] = symbol
+			} else if v == 1 {
+				r[ielement] = ""
+			} else {
+				r[ielement] = otherSymbol
+			}
+			h -= v * base
+			k--
+		}
+		b[irow] = r
+	}
+	return b
+}
+
+// examine the board following a move and updates the winner and the game-over
 func (env *environment) updateGameStatus(loc location, symbol string) {
 	// add new move on the board
 	env.board[loc[0]][loc[1]] = symbol
@@ -80,6 +112,7 @@ func (env *environment) updateGameStatus(loc location, symbol string) {
 	return
 }
 
+// pad symbol of a location to prepare for printing
 func padSymbol(s string) string {
 	if len(s) == 0 {
 		s = "     "
@@ -92,22 +125,29 @@ func padSymbol(s string) string {
 	return s
 }
 
-// printBoard prints the board with players on it
-func printBoard(b *board) {
-	// draw board
+// print the board with players on it
+func printBoard(b *board, toScreen bool) string {
+	var content string
 	for _, row := range *b {
-		log.Print("-------------------")
+		content += "------------------- \n"
+		//fmt.Println("-------------------")
 		rowPrint := "|"
 		for _, element := range row {
 			rowPrint += padSymbol(element)
 		}
-		log.Print(rowPrint)
+		content += rowPrint
+		content += "\n"
+		//fmt.Println(rowPrint)
 	}
-	log.Print("-------------------")
-	return
+	content += "------------------- \n"
+	//fmt.Println("-------------------")
+	if toScreen {
+		fmt.Print(content)
+	}
+	return content
 }
 
-// rowFilled checks whether all elements in a string array are equal to a certain string
+// check whether all elements in a string array are equal to a certain string
 func rowFilled(array []string, s string) bool {
 	for _, element := range array {
 		if element != s {
