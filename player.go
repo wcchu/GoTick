@@ -17,7 +17,6 @@ type robotSpecs struct {
 	eps  float64 // epsilon-greedy search
 	alp  float64 // learning rate
 	mean float64 // default value for an unseen state
-	fluc float64 // random flucuation for the above default value
 	draw float64 // reward for draw game (between winning 1 and losing -1)
 }
 
@@ -73,14 +72,14 @@ func createPlayers() []player {
 		}
 		if isRobot {
 			// specs
-			var e, a, m, f, d float64
-			fmt.Printf("specs (eps alp mean fluc draw) / click enter to use default values: ")
-			_, err := fmt.Scanf("%f%f%f%f%f", &e, &a, &m, &f, &d)
+			var e, a, m, d float64
+			fmt.Printf("specs (eps alp mean draw) / click enter to use default values: ")
+			_, err := fmt.Scanf("%f%f%f%f", &e, &a, &m, &d)
 			if err != nil {
-				e, a, m, f, d = 0.1, 0.5, 0.5, 0.1, 0.5
-				fmt.Printf("use default specs %v %v %v %v %v \n", e, a, m, f, d)
+				e, a, m, d = 0.1, 0.5, 0.5, 0.5
+				fmt.Printf("use default specs %v %v %v %v \n", e, a, m, d)
 			}
-			players[i].initializeRobot(name, robotSpecs{eps: e, alp: a, mean: m, fluc: f, draw: d}, false)
+			players[i].initializeRobot(name, robotSpecs{eps: e, alp: a, mean: m, draw: d}, false)
 		} else {
 			players[i].initializeHuman(name)
 		}
@@ -188,7 +187,7 @@ func (p *player) exportValueHistory() {
 	d := []byte(s)
 	ioutil.WriteFile(filename2, d, 0644)
 
-	fmt.Printf("%v's value histories of the oldest N states saved into %v \n", p.name, filename)
+	fmt.Printf("%v's value histories of the oldest %v states saved into %v \n", p.name, len(p.mind.valhist), filename)
 	return
 }
 
@@ -255,7 +254,7 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 						if testWinner != "" || testEmpties == 0 { // test state is final state, use reward as value
 							testValue = getReward(testWinner, p.symbol, p.mind.specs.draw)
 						} else { // test state is not final state, use default value
-							testValue = defaultValue(p.mind.specs.mean, p.mind.specs.fluc)
+							testValue = defaultValue(p.mind.specs.mean)
 						}
 					}
 					plan[irow][ielement] = strconv.FormatFloat(testValue, 'f', 2, 64)
@@ -306,7 +305,7 @@ func (p *player) updateStateValues(env environment) {
 			// If the state is not the final state, update its value in the regular way
 			existingValue, ok := p.mind.values[state]
 			if !ok {
-				existingValue = defaultValue(p.mind.specs.mean, p.mind.specs.fluc)
+				existingValue = defaultValue(p.mind.specs.mean)
 			}
 			updatedValue = existingValue + p.mind.specs.alp*(target-existingValue)
 		}
@@ -318,7 +317,7 @@ func (p *player) updateStateValues(env environment) {
 }
 
 // generate a value of certain mean and certain randomness
-func defaultValue(defaultMean, fluctuation float64) float64 {
+func defaultValue(defaultMean float64) float64 {
 	return defaultMean + fluctuation*(rand.Float64()-0.5)
 }
 
