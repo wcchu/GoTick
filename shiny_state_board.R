@@ -6,7 +6,7 @@ s <- c("x", "_", "o")
 
 ui <- pageWithSidebar(
   headerPanel("Board encoding"),
-  
+
   sidebarPanel(
     numericInput(inputId = "state",
                  label = "State code",
@@ -16,7 +16,7 @@ ui <- pageWithSidebar(
                  step = 1),
     tableOutput("stateboard")
   ),
-  
+
   mainPanel(
     fluidRow(
       column(3,
