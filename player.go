@@ -16,7 +16,6 @@ type stateValueHistory map[int64][]float64 // each state maps to an array of val
 type robotSpecs struct {
 	eps  float64 // epsilon-greedy search
 	alp  float64 // learning rate
-	mean float64 // default value for an unseen state
 	draw float64 // reward for draw game (between winning 1 and losing -1)
 }
 
@@ -72,14 +71,14 @@ func createPlayers() []player {
 		}
 		if isRobot {
 			// specs
-			var e, a, m, d float64
-			fmt.Printf("specs (eps alp mean draw) / click enter to use default values: ")
-			_, err := fmt.Scanf("%f%f%f%f", &e, &a, &m, &d)
+			var e, a, d float64
+			fmt.Printf("specs (eps alp draw) / click enter to use default values: ")
+			_, err := fmt.Scanf("%f%f%f", &e, &a, &d)
 			if err != nil {
-				e, a, m, d = 0.1, 0.5, 0.5, 0.5
-				fmt.Printf("use default specs %v %v %v %v \n", e, a, m, d)
+				e, a, d = epsilon, alpha, drawReward
+				fmt.Printf("use default specs %v %v %v \n", e, a, d)
 			}
-			players[i].initializeRobot(name, robotSpecs{eps: e, alp: a, mean: m, draw: d}, false)
+			players[i].initializeRobot(name, robotSpecs{eps: e, alp: a, draw: d}, false)
 		} else {
 			players[i].initializeHuman(name)
 		}
@@ -254,7 +253,7 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 						if testWinner != "" || testEmpties == 0 { // test state is final state, use reward as value
 							testValue = getReward(testWinner, p.symbol, p.mind.specs.draw)
 						} else { // test state is not final state, use default value
-							testValue = defaultValue(p.mind.specs.mean)
+							testValue = defaultValue()
 						}
 					}
 					plan[irow][ielement] = strconv.FormatFloat(testValue, 'f', 2, 64)
@@ -305,7 +304,7 @@ func (p *player) updateStateValues(env environment) {
 			// If the state is not the final state, update its value in the regular way
 			existingValue, ok := p.mind.values[state]
 			if !ok {
-				existingValue = defaultValue(p.mind.specs.mean)
+				existingValue = defaultValue()
 			}
 			updatedValue = existingValue + p.mind.specs.alp*(target-existingValue)
 		}
@@ -317,8 +316,8 @@ func (p *player) updateStateValues(env environment) {
 }
 
 // generate a value of certain mean and certain randomness
-func defaultValue(defaultMean float64) float64 {
-	return defaultMean + fluctuation*(rand.Float64()-0.5)
+func defaultValue() float64 {
+	return 0.5 + 1e-5*(rand.Float64()-0.5)
 }
 
 // should be run right after updateStateValues()
