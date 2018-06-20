@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"math/rand"
 	"os"
 	"strconv"
@@ -317,7 +318,9 @@ func (p *player) updateStateValues(env environment) {
 
 // generate a value of certain mean and certain randomness
 func defaultValue() float64 {
-	return 0.5 + 1e-5*(rand.Float64()-0.5)
+	v := initialValue + fluctuation*(rand.Float64()-0.5)
+	v = math.Min(math.Max(v, 0.0), 1.0) // the value is bound by [0, 1]
+	return v
 }
 
 // should be run right after updateStateValues()
