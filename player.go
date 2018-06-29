@@ -11,6 +11,7 @@ import (
 	"strconv"
 )
 
+type stateCounts map[int64]uint            // each state maps to how many times it's encountered
 type stateValues map[int64]float64         // each state maps to a value
 type stateValueHistory map[int64][]float64 // each state maps to an array of values
 
@@ -22,6 +23,7 @@ type robotSpecs struct {
 
 type mind struct {
 	specs   robotSpecs
+	counts  stateCounts       // count number of times each state has appeared
 	valhist stateValueHistory // historic values of N oldest states in the robot's record
 	values  stateValues       // most updated values of the robot's known states
 	verb    bool              // verbose
@@ -283,6 +285,7 @@ func (p *player) updatePlayerRecord(env environment) {
 	if p.being == "robot" {
 		p.updateStateValues(env)
 		p.updateStateValueHistory(env)
+		p.updateStateCounts()
 	}
 	return
 }
@@ -327,6 +330,18 @@ func defaultValue() float64 {
 func (p *player) updateStateValueHistory(env environment) {
 	for state := range p.mind.valhist {
 		p.mind.valhist[state] = append(p.mind.valhist[state], p.mind.values[state])
+	}
+	return
+}
+
+//
+func (p *player) updateStateCounts() {
+	for _, state := range p.history {
+		count, ok := p.mind.counts[state]
+		if !ok { // this state appears the first time
+			count = 0
+		}
+		p.mind.counts[state] = count + 1
 	}
 	return
 }
