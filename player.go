@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math"
 	"math/rand"
 	"os"
 	"strconv"
@@ -16,9 +15,8 @@ type stateValues map[int64]float64         // each state maps to a value
 type stateValueHistory map[int64][]float64 // each state maps to an array of values
 
 type robotSpecs struct {
-	eps  float64 // epsilon-greedy search
-	gam  float64 // discount factor
-	draw float64 // reward for draw game (between winning 1 and losing -1)
+	eps float64 // epsilon-greedy search
+	gam float64 // discount factor
 }
 
 type mind struct {
@@ -74,14 +72,14 @@ func createPlayers() []player {
 		}
 		if isRobot {
 			// specs
-			var e, g, d float64
-			fmt.Printf("specs (eps gamma draw) / click enter to use default values: ")
-			_, err := fmt.Scanf("%f%f%f", &e, &g, &d)
+			var e, g float64
+			fmt.Printf("specs (eps gamma) / click enter to use default values: ")
+			_, err := fmt.Scanf("%f%f%f", &e, &g)
 			if err != nil {
-				e, g, d = epsilon, gamma, drawReward
-				fmt.Printf("use default specs %v %v %v \n", e, g, d)
+				e, g = epsilon, gamma
+				fmt.Printf("use default specs %v %v \n", e, g)
 			}
-			players[i].initializeRobot(name, robotSpecs{eps: e, gam: g, draw: d}, false)
+			players[i].initializeRobot(name, robotSpecs{eps: e, gam: g}, false)
 		} else {
 			players[i].initializeHuman(name)
 		}
@@ -169,10 +167,10 @@ func (p *player) exportValueHistory() {
 
 	filename2 := p.name + "_oldest_states.txt"
 
-	var s string
+	var s string // the "print out" of the board
 	for state, valueHistory := range p.mind.valhist {
 
-		b := stateToBoard(state, p.symbol)
+		b := stateToBoard(state, "x") // use "x" as self to express board
 		s = s + strconv.FormatInt(state, 10) + "\n" + printBoard(&b, false) + "\n"
 
 		for time, value := range valueHistory {
@@ -251,19 +249,17 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 					testWinner := getWinner(env.board)              // winner after this move
 					testEmpties := getEmpties(env.board)            // empty spots after this move
 					env.board[irow][ielement] = ""                  // revert this action
-					// get value of the test state
+					// get gain of the test state
+					testGain := 0.0
+					if testWinner != "" || testEmpties == 0 { // test state is final state, use final reward
+						testGain += getReward(testWinner, p.symbol)
+					}
 					testValue, ok := p.mind.values[testState]
 					if !ok { // there's no record of this state, use default value
 						testValue = defaultValue()
 					}
-					plan[irow][ielement] = strconv.FormatFloat(testValue, 'f', 2, 64)
-					// get reward of the test state
-					testReward := 0.0
-					if testWinner != "" || testEmpties == 0 { // test state is final state, use reward as value
-						testReward = getReward(testWinner, p.symbol, p.mind.specs.draw)
-					}
-					// update move and best value
-					testGain := testReward + p.mind.specs.gam*testValue
+					testGain += p.mind.specs.gam * testValue
+					plan[irow][ielement] = strconv.FormatFloat(testGain, 'f', 2, 64)
 					if testGain > bestGain {
 						bestGain = testGain
 						actionLocation = location{irow, ielement}
@@ -298,7 +294,7 @@ func (p *player) updatePlayerRecord(env environment) {
 // update rule: V(s) = V(s) + alpha*(V(s') - V(s))
 func (p *player) updateStateValues(env environment) {
 	gains := make(map[int64]float64, len(p.history)) // values learned by this episode
-	finalReward := getReward(env.winner, p.symbol, p.mind.specs.draw)
+	finalReward := getReward(env.winner, p.symbol)
 	// loop backward from the last state to the first along history of this episode
 	// i is the index of a.history array
 	gain := 0.0
@@ -324,9 +320,7 @@ func (p *player) updateStateValues(env environment) {
 
 // generate a value of certain mean and certain randomness
 func defaultValue() float64 {
-	v := initialValue + fluctuation*(rand.Float64()-0.5)
-	v = math.Min(math.Max(v, 0.0), 1.0) // the value is bound by [0, 1]
-	return v
+	return initialValue + fluctuation*(rand.Float64()-0.5)
 }
 
 // should be run right after updateStateValues()

@@ -13,6 +13,6 @@ conv$state <- as.character(conv$state)
 
 plot <-
   ggplot(conv) +
-  geom_line(aes(x = time, y = value, color = state), size = 0.5) +
+  geom_line(aes(x = time, y = value, color = state), size = 1) +
   facet_grid(player ~ .)
 print(plot)

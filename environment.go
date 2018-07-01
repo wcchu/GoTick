@@ -159,6 +159,8 @@ func rowFilled(array []string, s string) bool {
 
 // check the current board and find the winner
 func getWinner(b board) string {
+	symbols := [2]string{"x", "o"} // player symbols on the board
+
 	// rows
 	for _, row := range b {
 		for _, p := range symbols {
@@ -218,12 +220,11 @@ func getEmpties(b board) int {
 }
 
 // get reward for a certain player by knowing the winner
-func getReward(w, s string, d float64) float64 {
+func getReward(w, s string) float64 {
 	if w == s { // this player wins
-		return 1.0
-	} else if w == "" { // draw
-		return d
+		return winReward
+	} else if w == "" { // draw game
+		return drawReward
 	}
-	// this player loses
-	return 0.0
+	return loseReward
 }
