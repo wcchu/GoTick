@@ -17,7 +17,7 @@ type stateValueHistory map[int64][]float64 // each state maps to an array of val
 
 type robotSpecs struct {
 	eps  float64 // epsilon-greedy search
-	alp  float64 // learning rate
+	gam  float64 // discount factor
 	draw float64 // reward for draw game (between winning 1 and losing -1)
 }
 
@@ -74,14 +74,14 @@ func createPlayers() []player {
 		}
 		if isRobot {
 			// specs
-			var e, a, d float64
-			fmt.Printf("specs (eps alp draw) / click enter to use default values: ")
-			_, err := fmt.Scanf("%f%f%f", &e, &a, &d)
+			var e, g, d float64
+			fmt.Printf("specs (eps gamma draw) / click enter to use default values: ")
+			_, err := fmt.Scanf("%f%f%f", &e, &g, &d)
 			if err != nil {
-				e, a, d = epsilon, alpha, drawReward
-				fmt.Printf("use default specs %v %v %v \n", e, a, d)
+				e, g, d = epsilon, gamma, drawReward
+				fmt.Printf("use default specs %v %v %v \n", e, g, d)
 			}
-			players[i].initializeRobot(name, robotSpecs{eps: e, alp: a, draw: d}, false)
+			players[i].initializeRobot(name, robotSpecs{eps: e, gam: g, draw: d}, false)
 		} else {
 			players[i].initializeHuman(name)
 		}
@@ -97,6 +97,7 @@ func (p *player) initializeRobot(name string, rs robotSpecs, verb bool) {
 	p.history = []int64{}
 	p.wins = 0
 	p.mind.specs = rs
+	p.mind.counts = stateCounts{}
 	p.mind.valhist = stateValueHistory{}
 	p.mind.values = stateValues{}
 	p.mind.verb = verb
@@ -239,7 +240,7 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 	} else {
 		plan := make(board, boardSize) // only useful for printing out the plan
 		// choose the best action based on current values of states
-		bestValue := -1.0
+		bestGain := -1.0
 		for irow, row := range env.board {
 			plan[irow] = make([]string, boardSize)
 			for ielement, element := range row {
@@ -250,19 +251,21 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 					testWinner := getWinner(env.board)              // winner after this move
 					testEmpties := getEmpties(env.board)            // empty spots after this move
 					env.board[irow][ielement] = ""                  // revert this action
-					// get value for the test state
+					// get value of the test state
 					testValue, ok := p.mind.values[testState]
-					if !ok { // there's no record of this state
-						if testWinner != "" || testEmpties == 0 { // test state is final state, use reward as value
-							testValue = getReward(testWinner, p.symbol, p.mind.specs.draw)
-						} else { // test state is not final state, use default value
-							testValue = defaultValue()
-						}
+					if !ok { // there's no record of this state, use default value
+						testValue = defaultValue()
 					}
 					plan[irow][ielement] = strconv.FormatFloat(testValue, 'f', 2, 64)
+					// get reward of the test state
+					testReward := 0.0
+					if testWinner != "" || testEmpties == 0 { // test state is final state, use reward as value
+						testReward = getReward(testWinner, p.symbol, p.mind.specs.draw)
+					}
 					// update move and best value
-					if testValue > bestValue {
-						bestValue = testValue
+					testGain := testReward + p.mind.specs.gam*testValue
+					if testGain > bestGain {
+						bestGain = testGain
 						actionLocation = location{irow, ielement}
 					}
 				}
@@ -287,35 +290,35 @@ func (p *player) updatePlayerRecord(env environment) {
 		p.updateStateValueHistory(env)
 		p.updateStateCounts()
 	}
+	p.resetHistory()
 	return
 }
 
 // should only be run at the end of an episode
 // update rule: V(s) = V(s) + alpha*(V(s') - V(s))
 func (p *player) updateStateValues(env environment) {
-	reward := getReward(env.winner, p.symbol, p.mind.specs.draw)
-	target := reward
-	// loop backward from the last state to the first along history
+	gains := make(map[int64]float64, len(p.history)) // values learned by this episode
+	finalReward := getReward(env.winner, p.symbol, p.mind.specs.draw)
+	// loop backward from the last state to the first along history of this episode
 	// i is the index of a.history array
+	gain := 0.0
 	for i := len(p.history) - 1; i >= 0; i-- {
 		state := p.history[i]
-		var updatedValue float64
+		var reward float64
 		if i == len(p.history)-1 {
-			// If the state is the final state, the value is the reward. The robot should
-			// just remember this state-value pair immediately.
-			updatedValue = target
-		} else {
-			// If the state is not the final state, update its value in the regular way
-			existingValue, ok := p.mind.values[state]
-			if !ok {
-				existingValue = defaultValue()
-			}
-			updatedValue = existingValue + p.mind.specs.alp*(target-existingValue)
+			reward = finalReward
 		}
-		p.mind.values[state] = updatedValue
-		target = updatedValue
+		gains[state] = gain
+		gain = reward + p.mind.specs.gam*gain
 	}
-	p.resetHistory() // state history is reset but values of state values is kept
+	// update the state values
+	for state, gain := range gains {
+		count, ok := p.mind.counts[state]
+		if !ok {
+			count = 0
+		}
+		p.mind.values[state] = (float64(count)*p.mind.values[state] + gain) / float64(count+1)
+	}
 	return
 }
 
@@ -334,7 +337,7 @@ func (p *player) updateStateValueHistory(env environment) {
 	return
 }
 
-//
+// update the record of how many times each state has appeared
 func (p *player) updateStateCounts() {
 	for _, state := range p.history {
 		count, ok := p.mind.counts[state]
