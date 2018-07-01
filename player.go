@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"math/rand"
 	"os"
 	"strconv"
@@ -174,13 +175,15 @@ func (p *player) exportValueHistory() {
 		s = s + strconv.FormatInt(state, 10) + "\n" + printBoard(&b, false) + "\n"
 
 		for time, value := range valueHistory {
-			row := []string{
-				strconv.FormatInt(state, 10),
-				strconv.Itoa(time),
-				strconv.FormatFloat(value, 'g', 5, 64)}
-			err := writer.Write(row)
-			if err != nil {
-				log.Fatal("Cannot write to file", err)
+			if math.Mod(float64(time), float64(nPrintHistory)) == 0.0 {
+				row := []string{
+					strconv.FormatInt(state, 10),
+					strconv.Itoa(time),
+					strconv.FormatFloat(value, 'g', 5, 64)}
+				err := writer.Write(row)
+				if err != nil {
+					log.Fatal("Cannot write to file", err)
+				}
 			}
 		}
 	}
@@ -250,15 +253,17 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 					testEmpties := getEmpties(env.board)            // empty spots after this move
 					env.board[irow][ielement] = ""                  // revert this action
 					// get gain of the test state
-					testGain := 0.0
-					if testWinner != "" || testEmpties == 0 { // test state is final state, use final reward
-						testGain += getReward(testWinner, p.symbol)
+					var testGain float64
+					if testWinner != "" || testEmpties == 0 {
+						// test state is final state, reward is non-zero, value is zero
+						testGain = getReward(testWinner, p.symbol)
+					} else {
+						testValue, ok := p.mind.values[testState]
+						if !ok { // there's no record of this state, use default value
+							testValue = defaultValue()
+						}
+						testGain = p.mind.specs.gam * testValue
 					}
-					testValue, ok := p.mind.values[testState]
-					if !ok { // there's no record of this state, use default value
-						testValue = defaultValue()
-					}
-					testGain += p.mind.specs.gam * testValue
 					plan[irow][ielement] = strconv.FormatFloat(testGain, 'f', 2, 64)
 					if testGain > bestGain {
 						bestGain = testGain
