@@ -12,6 +12,7 @@ type stateValues map[int64]float64         // each state maps to a value
 type stateValueHistory map[int64][]float64 // each state maps to an array of values
 
 type robotSpecs struct {
+	alp float64 // learning rate; if zero, use weighted average to update the value
 	eps float64 // epsilon-greedy search
 	gam float64 // discount factor
 }
@@ -69,14 +70,14 @@ func createPlayers() []player {
 		}
 		if isRobot {
 			// specs
-			var e, g float64
-			fmt.Printf("specs (eps gamma) / click enter to use default values: ")
-			_, err := fmt.Scanf("%f%f%f", &e, &g)
+			var a, e, g float64
+			fmt.Printf("specs (alp eps gam) / click enter to use default values: ")
+			_, err := fmt.Scanf("%f%f%f", &a, &e, &g)
 			if err != nil {
-				e, g = epsilon, gamma
-				fmt.Printf("use default specs %v %v \n", e, g)
+				a, e, g = alpha, epsilon, gamma
+				fmt.Printf("use default specs %v %v %v \n", a, e, g)
 			}
-			players[i].initializeRobot(name, robotSpecs{eps: e, gam: g}, false)
+			players[i].initializeRobot(name, robotSpecs{alp: a, eps: e, gam: g}, false)
 		} else {
 			players[i].initializeHuman(name)
 		}
@@ -231,27 +232,37 @@ func (p *player) updatePlayerRecord(env environment) {
 // should only be run at the end of an episode
 // update rule: V(s) = V(s) + alpha*(V(s') - V(s))
 func (p *player) updateStateValues(env environment) {
-	gains := make(map[int64]float64, len(p.history)) // values learned by this episode
+	gains := make(map[int64]float64, len(p.history)) // values learned through this episode
 	finalReward := getReward(env.winner, p.symbol)
 	// loop backward from the last state to the first along history of this episode
-	// i is the index of a.history array
+	// i is the index of history array
 	gain := 0.0
 	for i := len(p.history) - 1; i >= 0; i-- {
 		state := p.history[i]
+		gains[state] = gain
 		var reward float64
 		if i == len(p.history)-1 {
 			reward = finalReward
 		}
-		gains[state] = gain
 		gain = reward + p.mind.specs.gam*gain
 	}
 	// update the state values
 	for state, gain := range gains {
-		count, ok := p.mind.counts[state]
-		if !ok {
-			count = 0
+		if p.mind.specs.alp == 0.0 {
+			// update V by weighted average between new and existing values
+			count, ok := p.mind.counts[state]
+			if !ok {
+				count = 0
+			}
+			p.mind.values[state] = (float64(count)*p.mind.values[state] + gain) / float64(count+1)
+		} else {
+			// update V by correction to the new value with learning rate
+			oldValue, ok := p.mind.values[state]
+			if !ok {
+				oldValue = defaultValue()
+			}
+			p.mind.values[state] = oldValue + p.mind.specs.alp*(gain-oldValue)
 		}
-		p.mind.values[state] = (float64(count)*p.mind.values[state] + gain) / float64(count+1)
 	}
 	return
 }
