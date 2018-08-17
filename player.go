@@ -230,7 +230,6 @@ func (p *player) updatePlayerRecord(env environment) {
 }
 
 // should only be run at the end of an episode
-// update rule: V(s) = V(s) + alpha*(V(s') - V(s))
 func (p *player) updateStateValues(env environment) {
 	gains := make(map[int64]float64, len(p.history)) // values learned through this episode
 	finalReward := getReward(env.winner, p.symbol)
@@ -239,12 +238,14 @@ func (p *player) updateStateValues(env environment) {
 	gain := 0.0
 	for i := len(p.history) - 1; i >= 0; i-- {
 		state := p.history[i]
-		gains[state] = gain
 		var reward float64
-		if i == len(p.history)-1 {
+		if i == len(p.history)-2 {
 			reward = finalReward
+		} else {
+			reward = 0.0
 		}
 		gain = reward + p.mind.specs.gam*gain
+		gains[state] = gain
 	}
 	// update the state values
 	for state, gain := range gains {
