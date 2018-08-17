@@ -172,6 +172,9 @@ func (p *player) robotActs(env environment) (actionLocation location) {
 		}
 		pickedIndex := rand.Intn(len(possibleLocations))
 		actionLocation = possibleLocations[pickedIndex]
+		if p.mind.verb || printSteps {
+			fmt.Printf("player %v(%v)'s takes action randomly at %v \n", p.name, p.symbol, actionLocation)
+		}
 	} else {
 		plan := make(board, boardSize) // only useful for printing out the plan
 		// choose the best action based on current values of states
