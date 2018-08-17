@@ -66,16 +66,8 @@ func boardToState(b *board, symbol string) int64 {
 	return h
 }
 
-// decode the state id to reconstruct the board
-func stateToBoard(h int64, symbol string) board {
-	// assign opponent's symbol
-	var otherSymbol string
-	if symbol == "x" {
-		otherSymbol = "o"
-	} else {
-		otherSymbol = "x"
-	}
-
+// decode the state id to reconstruct the board in player's perspective
+func stateToBoard(h int64) board {
 	b := make(board, boardSize)
 	k := boardSize*boardSize - 1
 	for irow := boardSize - 1; irow >= 0; irow-- {
@@ -84,11 +76,11 @@ func stateToBoard(h int64, symbol string) board {
 			base := int64(math.Pow(3, float64(k)))
 			v := h / base
 			if v == 0 {
-				r[ielement] = symbol
+				r[ielement] = "p" // the player
 			} else if v == 1 {
-				r[ielement] = ""
+				r[ielement] = "" // empty
 			} else {
-				r[ielement] = otherSymbol
+				r[ielement] = "o" // the opponent
 			}
 			h -= v * base
 			k--
