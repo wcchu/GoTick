@@ -48,8 +48,11 @@ func (env *environment) initializeEnvironment() {
 // encode the game board into an integer (state id)
 // NOTE: For each player, each location's status is viewed only as occupied either by him/herself or
 //       by the opponent, regardless of the actual symbol ("x" or "o") there.
+// NOTE: For the same board and the same user, the player plays next or the opponent plays next makes
+//       different states.
 func boardToState(b *board, symbol string) int64 {
-	var k, h, v int64
+	var k, h, v, r int64
+	// encode board
 	for _, row := range *b {
 		for _, element := range row {
 			if element == symbol { // occupied by current player
@@ -63,31 +66,50 @@ func boardToState(b *board, symbol string) int64 {
 			k++
 		}
 	}
+	// encode player symbol
+	if symbol == "x" {
+		r = 0
+	} else {
+		r = 1
+	}
+	h += int64(math.Pow(3, float64(k))) * r
 	return h
 }
 
 // decode the state id to reconstruct the board in player's perspective
-func stateToBoard(h int64) board {
+func stateToBoard(h int64) (board, string) {
+	var symbol string
+	k := boardSize * boardSize
+	// decode player symbol
+	base := int64(math.Pow(3, float64(k)))
+	v := h / base
+	if v == 0 {
+		symbol = "x"
+	} else {
+		symbol = "o"
+	}
+	h -= v * base
+	k--
+	// decode board
 	b := make(board, boardSize)
-	k := boardSize*boardSize - 1
 	for irow := boardSize - 1; irow >= 0; irow-- {
 		r := make([]string, boardSize)
 		for ielement := boardSize - 1; ielement >= 0; ielement-- {
-			base := int64(math.Pow(3, float64(k)))
-			v := h / base
+			base = int64(math.Pow(3, float64(k)))
+			v = h / base
 			if v == 0 {
-				r[ielement] = "p" // the player
+				r[ielement] = "P" // the player
 			} else if v == 1 {
 				r[ielement] = "" // empty
 			} else {
-				r[ielement] = "o" // the opponent
+				r[ielement] = "-" // the opponent
 			}
 			h -= v * base
 			k--
 		}
 		b[irow] = r
 	}
-	return b
+	return b, symbol
 }
 
 // examine the board following a move and updates the winner and the game-over
@@ -110,6 +132,10 @@ func padSymbol(s string) string {
 		s = "     "
 	} else if len(s) == 1 {
 		s = "  " + s + "  "
+	} else if len(s) == 2 {
+		s = " " + s + "  "
+	} else if len(s) == 3 {
+		s = " " + s + " "
 	} else if len(s) == 4 {
 		s = " " + s
 	}

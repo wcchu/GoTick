@@ -49,8 +49,8 @@ func exportValueHistory(name string, vhist stateValueHistory) {
 	var s string // the "print out" of the board
 	for state, valueHistory := range vhist {
 
-		b := stateToBoard(state)
-		s = s + strconv.FormatInt(state, 10) + "\n" + printBoard(&b, false) + "\n"
+		b, sym := stateToBoard(state)
+		s = s + strconv.FormatInt(state, 10) + "\n" + "player plays " + sym + "\n" + printBoard(&b, false) + "\n"
 
 		for time, value := range valueHistory {
 			if math.Mod(float64(time), float64(nPrintHistory)) == 0.0 {

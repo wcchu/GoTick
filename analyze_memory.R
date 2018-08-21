@@ -23,8 +23,8 @@ print(hist_value)
 
 hist_value_sum <-
   ggplot(memory) +
-  geom_histogram(aes(x = sum), binwidth = 0.02) +
-  labs(title = 'Histogram of p1 value + p2 value ', x = 'Value', y = 'Count')
+  geom_histogram(aes(x = dif), binwidth = 0.02) +
+  labs(title = 'Histogram of value differences between players', x = 'Value', y = 'Count')
 print(hist_value_sum)
 
 c <- cor(x = memory$value1, y = memory$value2)
