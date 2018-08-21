@@ -48,8 +48,11 @@ func (env *environment) initializeEnvironment() {
 // encode the game board into an integer (state id)
 // NOTE: For each player, each location's status is viewed only as occupied either by him/herself or
 //       by the opponent, regardless of the actual symbol ("x" or "o") there.
+// NOTE: For the same board and the same user, the player plays next or the opponent plays next makes
+//       different states.
 func boardToState(b *board, symbol string) int64 {
-	var k, h, v int64
+	var k, h, v, r int64
+	// encode board
 	for _, row := range *b {
 		for _, element := range row {
 			if element == symbol { // occupied by current player
@@ -63,39 +66,50 @@ func boardToState(b *board, symbol string) int64 {
 			k++
 		}
 	}
+	// encode player symbol
+	if symbol == "x" {
+		r = 0
+	} else {
+		r = 1
+	}
+	h += int64(math.Pow(3, float64(k))) * r
 	return h
 }
 
-// decode the state id to reconstruct the board
-func stateToBoard(h int64, symbol string) board {
-	// assign opponent's symbol
-	var otherSymbol string
-	if symbol == "x" {
-		otherSymbol = "o"
+// decode the state id to reconstruct the board in player's perspective
+func stateToBoard(h int64) (board, string) {
+	var symbol string
+	k := boardSize * boardSize
+	// decode player symbol
+	base := int64(math.Pow(3, float64(k)))
+	v := h / base
+	if v == 0 {
+		symbol = "x"
 	} else {
-		otherSymbol = "x"
+		symbol = "o"
 	}
-
+	h -= v * base
+	k--
+	// decode board
 	b := make(board, boardSize)
-	k := boardSize*boardSize - 1
 	for irow := boardSize - 1; irow >= 0; irow-- {
 		r := make([]string, boardSize)
 		for ielement := boardSize - 1; ielement >= 0; ielement-- {
-			base := int64(math.Pow(3, float64(k)))
-			v := h / base
+			base = int64(math.Pow(3, float64(k)))
+			v = h / base
 			if v == 0 {
-				r[ielement] = symbol
+				r[ielement] = "P" // the player
 			} else if v == 1 {
-				r[ielement] = ""
+				r[ielement] = "" // empty
 			} else {
-				r[ielement] = otherSymbol
+				r[ielement] = "-" // the opponent
 			}
 			h -= v * base
 			k--
 		}
 		b[irow] = r
 	}
-	return b
+	return b, symbol
 }
 
 // examine the board following a move and updates the winner and the game-over
@@ -118,6 +132,10 @@ func padSymbol(s string) string {
 		s = "     "
 	} else if len(s) == 1 {
 		s = "  " + s + "  "
+	} else if len(s) == 2 {
+		s = " " + s + "  "
+	} else if len(s) == 3 {
+		s = " " + s + " "
 	} else if len(s) == 4 {
 		s = " " + s
 	}
@@ -159,6 +177,8 @@ func rowFilled(array []string, s string) bool {
 
 // check the current board and find the winner
 func getWinner(b board) string {
+	symbols := [2]string{"x", "o"} // player symbols on the board
+
 	// rows
 	for _, row := range b {
 		for _, p := range symbols {
@@ -218,12 +238,11 @@ func getEmpties(b board) int {
 }
 
 // get reward for a certain player by knowing the winner
-func getReward(w, s string, d float64) float64 {
+func getReward(w, s string) float64 {
 	if w == s { // this player wins
-		return 1.0
-	} else if w == "" { // draw
-		return d
+		return winReward
+	} else if w == "" { // draw game
+		return drawReward
 	}
-	// this player loses
-	return 0.0
+	return loseReward
 }

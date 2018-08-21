@@ -78,7 +78,7 @@ func runSession(ps *playerPair, nEpisodes int) {
 
 	// run episodes
 	for episode := 0; episode < nEpisodes; episode++ {
-		if math.Mod(float64(episode+1), 1000) == 0 && ps[0].being == ps[1].being {
+		if math.Mod(float64(episode+1), nPrintEpisode) == 0 && ps[0].being == ps[1].being {
 			fmt.Printf("episode #%v \n", episode)
 		}
 		runEpisode(ps, r)
@@ -87,8 +87,8 @@ func runSession(ps *playerPair, nEpisodes int) {
 	// robot export values
 	for i := range ps {
 		if ps[i].being == "robot" {
-			ps[i].exportValues()
-			ps[i].exportValueHistory()
+			exportValues(ps[i].name, ps[i].mind.values)
+			exportValueHistory(ps[i].name, ps[i].mind.valhist)
 		}
 	}
 	fmt.Printf("*** Session ends - %v won %v times / %v won %v times *** \n\n", ps[0].name, ps[0].wins, ps[1].name, ps[1].wins)
