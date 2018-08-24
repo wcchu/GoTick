@@ -78,17 +78,18 @@ func runSession(ps *playerPair, nEpisodes int) {
 
 	// run episodes
 	for episode := 0; episode < nEpisodes; episode++ {
-		if math.Mod(float64(episode+1), nPrintEpisode) == 0 && ps[0].being == ps[1].being {
-			fmt.Printf("episode #%v \n", episode)
+		epiNum := episode + 1 // epiNum starts from 1 which is more human readable
+		if math.Mod(float64(epiNum), nPrintEpisode) == 0 && ps[0].being == ps[1].being {
+			fmt.Printf("episode #%v \n", epiNum)
 		}
-		runEpisode(ps, r)
+		runEpisode(ps, r, episode == 0)
 	}
 
 	// robot export values
 	for i := range ps {
 		if ps[i].being == "robot" {
 			exportValues(ps[i].name, ps[i].mind.values)
-			exportValueHistory(ps[i].name, ps[i].mind.valhist)
+			exportValueHistory(ps[i].name, ps[i].mind.demohist)
 		}
 	}
 	fmt.Printf("*** Session ends - %v won %v times / %v won %v times *** \n\n", ps[0].name, ps[0].wins, ps[1].name, ps[1].wins)
@@ -97,7 +98,7 @@ func runSession(ps *playerPair, nEpisodes int) {
 }
 
 // run an episode and let players (if robot) remember what they've learnt
-func runEpisode(ps *playerPair, report bool) {
+func runEpisode(ps *playerPair, report, firstEpisode bool) {
 	var loc location
 	var env environment
 	if printSteps { // global const to force reporting
@@ -129,13 +130,18 @@ func runEpisode(ps *playerPair, report bool) {
 		// update environment by the action
 		env.updateGameStatus(loc, s)
 
-		// update state history and remember the oldest 9 states
+		// update state history and remember the demo states
 		for i := range ps {
 			// The same board is encoded differently by the two players;
 			// each location is viewed not as "x" or "o", but instead as Me or You.
 			state := boardToState(&env.board, ps[i].symbol)
 			ps[i].updateStateSequence(state)
-			ps[i].getOldestNStates(state)
+		}
+	}
+
+	if firstEpisode {
+		for i := range ps {
+			ps[i].getDemoStates()
 		}
 	}
 

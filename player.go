@@ -18,11 +18,11 @@ type robotSpecs struct {
 }
 
 type mind struct {
-	specs   robotSpecs
-	counts  stateCounts       // count number of times each state has appeared
-	valhist stateValueHistory // historic values of N oldest states in the robot's record
-	values  stateValues       // most updated values of the robot's known states
-	verb    bool              // verbose
+	specs    robotSpecs
+	counts   stateCounts       // count number of times each state has appeared
+	demohist stateValueHistory // historic values of demo states in the robot's record
+	values   stateValues       // most updated values of the robot's known states
+	verb     bool              // verbose
 }
 
 type player struct {
@@ -94,7 +94,7 @@ func (p *player) initializeRobot(name string, rs robotSpecs, verb bool) {
 	p.wins = 0
 	p.mind.specs = rs
 	p.mind.counts = stateCounts{}
-	p.mind.valhist = stateValueHistory{}
+	p.mind.demohist = stateValueHistory{}
 	p.mind.values = stateValues{}
 	p.mind.verb = verb
 	return
@@ -122,9 +122,12 @@ func (p *player) updateStateSequence(state int64) {
 	return
 }
 
-func (p *player) getOldestNStates(state int64) {
-	if p.being == "robot" && len(p.mind.valhist) < nOldest { // record up to N states in valhist
-		p.mind.valhist[state] = []float64{}
+func (p *player) getDemoStates() {
+	if p.being == "robot" {
+		for i := len(p.history) - 1; i > len(p.history)-(1+nDemoStates); i-- {
+			state := p.history[i]
+			p.mind.demohist[state] = []float64{}
+		}
 	}
 	return
 }
@@ -278,8 +281,8 @@ func defaultValue() float64 {
 
 // should be run right after updateStateValues()
 func (p *player) updateStateValueHistory(env environment) {
-	for state := range p.mind.valhist {
-		p.mind.valhist[state] = append(p.mind.valhist[state], p.mind.values[state])
+	for state := range p.mind.demohist {
+		p.mind.demohist[state] = append(p.mind.demohist[state], p.mind.values[state])
 	}
 	return
 }
