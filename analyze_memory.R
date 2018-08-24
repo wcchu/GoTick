@@ -1,31 +1,36 @@
 library(tidyverse)
 
-memory1 <-
-  read.csv('r2d2_values.csv', stringsAsFactors = FALSE, header = FALSE) %>%
-  select(state = V1, value1 = V2)
-memory2 <-
-  read.csv('termino_values.csv', stringsAsFactors = FALSE, header = FALSE) %>%
-  select(state = V1, value2 = V2)
+value_files <- Sys.glob(paste("*", "values", "csv", sep = "."))
 
-memory <-
-  inner_join(memory1,
-             memory2,
-             by = "state") %>%
-  mutate(dif = abs(value1 - value2),
-         sum = value1 + value2)
+## import state-values
+memory <- c()
+for (value_file in value_files) {
+  name <- unlist(strsplit(value_file, split = "\\."))[1]
+  memory <-
+    rbind(
+      memory,
+      read.csv(value_file, stringsAsFactors = FALSE, header = FALSE) %>%
+        select(state = V1, value = V2) %>%
+        mutate(name = name)
+    )
+}
 
 hist_value <-
   ggplot(memory) +
-  geom_histogram(aes(x = value1), binwidth = 0.05, fill = 'darkred', alpha = 0.3) +
-  geom_histogram(aes(x = value2), binwidth = 0.05, fill = 'darkgreen', alpha = 0.3) +
-  labs(title = 'Histogram of state values (red = p1, green = p2)', x = 'Value', y = 'Count')
+  geom_histogram(aes(x = value, fill = name),
+                 alpha = 0.35, position = "identity", binwidth = 0.02) +
+  labs(title = 'Histogram of state values', x = 'Value', y = 'Count')
 print(hist_value)
 
-hist_value_sum <-
-  ggplot(memory) +
-  geom_histogram(aes(x = dif), binwidth = 0.02) +
-  labs(title = 'Histogram of value differences between players', x = 'Value', y = 'Count')
-print(hist_value_sum)
+## define each state's statistics
+memory_state <-
+  memory %>%
+  group_by(state) %>%
+  summarise(rng = max(value) - min(value),
+            avg = mean(value))
 
-c <- cor(x = memory$value1, y = memory$value2)
-print(c)
+hist_value_state <-
+  ggplot(memory_state) +
+  geom_histogram(aes(x = rng), binwidth = 0.02) +
+  labs(title = 'Histogram of value range between players', x = 'Value', y = 'Count')
+print(hist_value_state)
