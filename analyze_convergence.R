@@ -1,6 +1,6 @@
 library(tidyverse)
 
-conv_files <- Sys.glob(paste("*", "oldest_states_hist", "csv", sep = "."))
+conv_files <- Sys.glob(paste("*", "demo_states_hist", "csv", sep = "."))
 
 ## import state-value hist
 conv <- c()

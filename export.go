@@ -35,7 +35,7 @@ func exportValues(name string, values stateValues) {
 
 // write state values of the player to a csv file
 func exportValueHistory(name string, vhist stateValueHistory) {
-	filename := name + ".oldest_states_hist.csv"
+	filename := name + ".demo_states_hist.csv"
 	file, err := os.Create(filename)
 	if err != nil {
 		log.Fatal("Cannot create file", err)
@@ -44,7 +44,7 @@ func exportValueHistory(name string, vhist stateValueHistory) {
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
-	filename2 := name + ".oldest_states.txt"
+	filename2 := name + ".demo_states.txt"
 
 	var s string // the "print out" of the board
 	for state, valueHistory := range vhist {
@@ -69,6 +69,6 @@ func exportValueHistory(name string, vhist stateValueHistory) {
 	d := []byte(s)
 	ioutil.WriteFile(filename2, d, 0644)
 
-	fmt.Printf("%v's value histories of the oldest %v states saved into %v \n", name, len(vhist), filename)
+	fmt.Printf("%v's value histories of the %v demo states saved into %v \n", name, len(vhist), filename)
 	return
 }

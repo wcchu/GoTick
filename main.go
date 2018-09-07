@@ -7,7 +7,7 @@ import (
 
 // Global constants
 const boardSize = 3         // length/width of the board
-const nOldest = 9           // number of oldest states to remember
+const nDemoStates = 3       // number of states for history demonstration
 const printSteps = false    // print board and plan at each step
 const alpha = 0.5           // default alpha (learning rate)
 const epsilon = 0.1         // default epsilon (probability to take random action)
