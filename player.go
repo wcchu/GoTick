@@ -71,11 +71,11 @@ func createPlayers() []player {
 		if isRobot {
 			// specs
 			var a, e, g float64
-			fmt.Printf("specs (alp eps gam) / click enter to use default values: ")
+			fmt.Printf("specs (alp eps gam) / click enter to use default values (%v %v %v): ", alpha, epsilon, gamma)
 			_, err := fmt.Scanf("%f%f%f", &a, &e, &g)
 			if err != nil {
 				a, e, g = alpha, epsilon, gamma
-				fmt.Printf("use default specs %v %v %v \n", a, e, g)
+				fmt.Printf("use default specs \n")
 			}
 			players[i].initializeRobot(name, robotSpecs{alp: a, eps: e, gam: g}, false)
 		} else {
