@@ -3,4 +3,4 @@
 .PHONY: clean
 
 clean:
-	rm -f *.values.csv *.demo_states.txt *.deom_states_hist.csv
+	rm -f *.values.csv *.demo_states.txt *.demo_states_hist.csv
