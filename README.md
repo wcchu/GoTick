@@ -3,7 +3,7 @@ Tic-tac-toe - Reinforcement learning exercise in golang
 
 1. Introduction
 
-The program builds a tournament of the tic-tac-toe games (https://en.wikipedia.org/wiki/Tic-tac-toe). Any number of robot and/or human players attend the tournament. In each session, two players out of all players are chosen. These two players play any number of episodes. A robot has a fixed intelligence but gain experience over episodes and sessions. Each robot exports its experience to an data file which is then analyzed and visualized.
+The program builds a tournament of the tic-tac-toe games (https://en.wikipedia.org/wiki/Tic-tac-toe). Any number of robot and/or human players attend the tournament. In each session, two out of all players are chosen. These two players play any number of episodes. A robot has a fixed intelligence but gain experience over episodes and sessions. Each robot exports its experience to an data file which is then analyzed and visualized.
 
 To run the program, build the executable file by `go build -o executable_file.exe` then run that executable.
 
@@ -26,7 +26,7 @@ where the `update_func` can be chosen between
 update_func1(v, s) = v + alpha * (sum - v)
 ```
 
-where `alpha` is the learning rate, and 
+where `alpha` is the learning rate, and
 
 ```
 update_func2(v, s) = (n * v + sum) / (n + 1)
@@ -36,7 +36,7 @@ where `n` is the number of times `v` has already been updated, including the fir
 
 3. Reward
 
-Reward `R` is defined at the end of an episode, with 3 outcomes: winning, losing, and draw.
+Reward `R` is defined at the end of an episode, for each of the 3 outcomes: winning, losing, and draw.
 
 4. State
 
