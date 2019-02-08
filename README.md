@@ -22,21 +22,17 @@ return V
 
 where `gamma` is the discount rate of reward. The `update_func` can be chosen between the following two definitions:
 
-(1)
+(1) Move `v` toward the value learned in the newest episode (`sum`), with the learning rate `alpha`.
 
 ```
 update_func(v, s) = v + alpha * (sum - v)
 ```
 
-where `alpha` is the learning rate.
-
-(2)
+(2) Assign `v` to the average over all values learned from previous episodes, including the newest one.
 
 ```
 update_func(v, s) = (n * v + sum) / (n + 1)
 ```
-
-where `n` is the number of times `v` has already been updated, including the first time `v` was met.
 
 3. Reward
 
