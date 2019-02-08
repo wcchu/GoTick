@@ -20,16 +20,20 @@ end for
 return V
 ```
 
-where the `update_func` can be chosen between
+where `gamma` is the discount rate of reward. The `update_func` can be chosen between the following two definitions:
+
+(1)
 
 ```
-update_func1(v, s) = v + alpha * (sum - v)
+update_func(v, s) = v + alpha * (sum - v)
 ```
 
-where `alpha` is the learning rate, and
+where `alpha` is the learning rate.
+
+(2)
 
 ```
-update_func2(v, s) = (n * v + sum) / (n + 1)
+update_func(v, s) = (n * v + sum) / (n + 1)
 ```
 
 where `n` is the number of times `v` has already been updated, including the first time `v` was met.
