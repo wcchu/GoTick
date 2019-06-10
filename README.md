@@ -3,7 +3,7 @@ Tic-tac-toe - Reinforcement learning exercise in golang
 
 1. Introduction
 
-The program builds a tournament of the tic-tac-toe games (https://en.wikipedia.org/wiki/Tic-tac-toe). Any number of robot and/or human players attend the tournament. In each session, two out of all players are chosen. These two players play any number of episodes. A robot has a fixed intelligence but gain experience over episodes and sessions. Each robot exports its experience to an data file which is then analyzed and visualized.
+The program builds a tournament of the tic-tac-toe games (https://en.wikipedia.org/wiki/Tic-tac-toe). Any number of robot and/or human players attend the tournament. In each session, two out of all players are chosen. These two players play any number of episodes. A robot has a fixed intelligence but gains experience over episodes and sessions. Each robot exports its experience to an data file which is then analyzed and visualized.
 
 To run the program, build the executable file by `go build -o executable_file.exe` then run that executable.
 
@@ -20,7 +20,7 @@ end for
 return V
 ```
 
-where `gamma` is the discount rate of reward. The `update_func` can be chosen between the following two definitions:
+where `R[t]` and `x[t]` are the reward and the state at time `t` respectively, `V(x)` is the value for entering state `x`, and `gamma` is the discount rate of reward. The `update_func` can be chosen between the following two definitions:
 
 (1) Move `v` toward the value learned in the newest episode (`sum`), with the learning rate `alpha`.
 
@@ -36,7 +36,7 @@ update_func(v, s) = (n * v + sum) / (n + 1)
 
 3. Reward
 
-Reward `R` is defined at the end of an episode, for each of the 3 outcomes: winning, losing, and draw.
+Reward `R` is defined at the end of an episode, for each of the 3 outcomes: winning, losing, and draw. Thus `R[t] = 0` except at the end of time.
 
 4. State
 
