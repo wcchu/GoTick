@@ -15,7 +15,7 @@ We use Monte-Carlo method for learning:
 sum = 0
 for t = T-1 to 0:
   sum = R[t+1] + gamma * sum
-  V(x[t]) = update_func(V(x[t], sum)
+  V(x[t]) = update_func(V(x[t]), sum)
 end for
 return V
 ```
