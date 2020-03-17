@@ -43,3 +43,4 @@ Reward `R` is defined at the end of an episode, for each of the 3 outcomes: winn
 At each step in an episode, the state of game for a player is defined by the game board in the player's eye; a board composed by `X`s and `O`s has to be converted to `me`s and `you`s, together with the information of who's playing the next step, to be meaningful.
 
 reference: https://github.com/lazyprogrammer/machine_learning_examples/blob/master/rl/tic_tac_toe.py
+note: I recommend using meta linter https://github.com/alecthomas/gometalinter.
