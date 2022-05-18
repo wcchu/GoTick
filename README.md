@@ -1,13 +1,13 @@
 # GoTick
 Tic-tac-toe - Reinforcement learning exercise in golang
 
-1. Introduction
+## Introduction
 
 The program builds a tournament of the tic-tac-toe games (https://en.wikipedia.org/wiki/Tic-tac-toe). Any number of robot and/or human players attend the tournament. In each session, two out of all players are chosen. These two players play any number of episodes. A robot has a fixed intelligence but gains experience over episodes and sessions. Each robot exports its experience to an data file which is then analyzed and visualized.
 
 To run the program, build the executable file by `go build -o executable_file.exe` then run that executable.
 
-2. Reinforcement learning algorithm
+## Reinforcement learning algorithm
 
 We use Monte-Carlo method for learning:
 
@@ -34,11 +34,11 @@ update_func(v, s) = v + alpha * (sum - v)
 update_func(v, s) = (n * v + sum) / (n + 1)
 ```
 
-3. Reward
+## Reward
 
 Reward `R` is defined at the end of an episode, for each of the 3 outcomes: winning, losing, and draw. Thus `R[t] = 0` except at the end of time.
 
-4. State
+## State
 
 At each step in an episode, the state of game for a player is defined by the game board in the player's eye; a board composed by `X`s and `O`s has to be converted to `me`s and `you`s, together with the information of who's playing the next step, to be meaningful.
 
