@@ -5,7 +5,7 @@ Tic-tac-toe - Reinforcement learning exercise in golang
 
 The program builds a tournament of the tic-tac-toe games (https://en.wikipedia.org/wiki/Tic-tac-toe). Any number of robot and/or human players attend the tournament. In each session, two out of all players are chosen. These two players play any number of episodes. A robot has a fixed intelligence but gains experience over episodes and sessions. Each robot exports its experience to an data file which is then analyzed and visualized.
 
-To run the program, build the executable file by `go build -o executable_file.exe` then run that executable.
+To run the program, build the executable file by `go get github.com/wcchu/GoTick` then run `GoTick`.
 
 ## Reinforcement learning algorithm
 
